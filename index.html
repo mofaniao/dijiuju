@@ -1196,6 +1196,7 @@ let profileName = ''
 let currentPage = 1
 const PAGE_SIZE = 20
 let hasMore = true
+let totalMoodsCount = 0  // 所有心情的总条数
 let loadMode = 'more'  // 'more' = 加载更多, 'page' = 分页
 
 function toggleProfile() {
@@ -1596,7 +1597,7 @@ function renderHistory() {
     if (heatmapFilterDate) {
       title.innerHTML = `${heatmapFilterDate} 的心情（${moodsList.length} 条）<button onclick="clearDateFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
     } else {
-      title.textContent = `共 ${moodsList.length} 条心情`
+      title.textContent = `共 ${totalMoodsCount || moodsList.length} 条心情`
     }
   }
   // 更新模式切换按钮
@@ -1696,6 +1697,9 @@ async function loadMore() {
   const btn = document.getElementById('load-more-btn')
   btn.textContent = '加载中...'
   btn.disabled = true
+  // 获取总数
+  const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+  totalMoodsCount = count || 0
   const from = (currentPage - 1) * PAGE_SIZE
   const to = currentPage * PAGE_SIZE - 1
   const { data, error } = await sb.from('moods')
@@ -1712,6 +1716,9 @@ async function loadMore() {
 
 async function goPage(page) {
   currentPage = page
+  // 获取总数
+  const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+  totalMoodsCount = count || 0
   const from = (currentPage - 1) * PAGE_SIZE
   const to = currentPage * PAGE_SIZE - 1
   const { data, error } = await sb.from('moods')
@@ -2158,6 +2165,13 @@ async function deleteMood(id) {
 
 async function loadMoods(append = false, filterDate = null) {
   if (!append) { currentPage = 1 }
+  // 先获取总数（非筛选模式时）
+  if (!filterDate) {
+    const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+    totalMoodsCount = count || 0
+  } else {
+    totalMoodsCount = 0
+  }
   let query = sb.from('moods').select('*')
   if (filterDate) {
     // 按日期筛选：created_at >= filterDate 00:00:00 且 < 次日 00:00:00
