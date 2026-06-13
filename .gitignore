@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.env
+*.log
+.deploy_key
+.deploy_key.pub
+.ssh_config
