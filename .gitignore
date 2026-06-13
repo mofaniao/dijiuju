@@ -5,3 +5,4 @@ dist/
 .deploy_key
 .deploy_key.pub
 .ssh_config
+deploy.sh
