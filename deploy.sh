@@ -11,7 +11,7 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_DIR"
 
 echo "=============================================="
-echo " 心情记录 - Deploy Script"
+echo "  心情记录 - Deploy Script"
 echo "=============================================="
 echo ""
 
@@ -39,11 +39,11 @@ fi
 # --- 推送到 GitHub ---
 echo ""
 echo "[4/4] 推送到 GitHub..."
-git -c core.sshCommand="ssh -F C:/Users/houzh/.ssh/config -i D:/Claw/.deploy_key" push origin main
+git -c core.sshCommand="ssh -F C:/Users/houzh/.ssh/config -o IdentitiesOnly=yes" push origin main
 
 echo ""
 echo "=============================================="
-echo " 部署完成！"
+echo "  部署完成！"
 echo "=============================================="
 echo ""
 echo "仓库地址: https://github.com/mofaniao/dijiuju"
