@@ -975,7 +975,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_Q3K48_BtjJIKKsUYvCPu4Q_wQSeC4Qe'
 let currentUser = null
 let editingId = null
 let moodsList = []
-let selectedMood = null
+let selectedMood = '😌'  // 默认选中"平静"
 let pendingImages = []   // 待上传的图片 File 对象数组
 const MAX_IMAGES = 9
 let heatmapFilterDate = null  // 热力图筛选日期，null=不过滤
@@ -2066,7 +2066,7 @@ function selectMood(emoji) {
 
 
 function resetForm() {
-  selectedMood = null
+  selectedMood = '😌'  // 重置后默认选中"平静"
   editingId = null
   document.getElementById('mood-note').value = ''
   document.getElementById('edit-id').value = ''
