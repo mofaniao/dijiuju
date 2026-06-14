@@ -1,0 +1,2488 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>心情记录</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root { --radius: 14px; --radius-sm: 10px; }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100dvh;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f0eb;
+    --card: rgba(255,255,255,0.85);
+    --card-solid: #ffffff;
+    --text: #2c2c2c;
+    --sub: #888;
+    --border: rgba(0,0,0,0.08);
+    --accent: #6c5ce7;
+    --accent-hover: #5a4bd1;
+    --accent-glow: rgba(108,92,231,0.3);
+    --danger: #e74c3c;
+    --success: #27ae60;
+    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --input-bg: rgba(0,0,0,0.03);
+    --tag-bg: rgba(0,0,0,0.04);
+    --tag-hl-bg: #f3f0ff;
+    --item-border: rgba(0,0,0,0.06);
+    --error-bg: #fef0ef;
+    --success-bg: #eafaf1;
+    --toast-bg: #333;
+    --toast-text: #fff;
+    --heat-0: #ebedf0;
+    --heat-1: #e9d8fd;
+    --heat-2: #c4b5fd;
+    --heat-3: #a78bfa;
+    --heat-4: #6c5ce7;
+  }
+
+  [data-theme="dark"] {
+    --bg: #0f0f1a;
+    --card: rgba(30,30,55,0.8);
+    --card-solid: #1e1e37;
+    --text: #e0e0e0;
+    --sub: #888;
+    --border: rgba(255,255,255,0.08);
+    --accent: #a78bfa;
+    --accent-hover: #c4b5fd;
+    --accent-glow: rgba(167,139,250,0.3);
+    --danger: #ff6b6b;
+    --success: #4ecb71;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --input-bg: rgba(255,255,255,0.05);
+    --tag-bg: rgba(255,255,255,0.06);
+    --tag-hl-bg: rgba(167,139,250,0.15);
+    --item-border: rgba(255,255,255,0.06);
+    --error-bg: rgba(255,107,107,0.12);
+    --success-bg: rgba(78,203,113,0.12);
+    --toast-bg: #e0e0e0;
+    --toast-text: #0f0f1a;
+    --heat-0: #161b22;
+    --heat-1: #1e0933;
+    --heat-2: #3b1f6e;
+    --heat-3: #7c3aed;
+    --heat-4: #a78bfa;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background .5s, color .5s;
+  }
+  .card, .auth-card {
+    border: 1px solid var(--border);
+  }
+
+  /* Auth */
+  .auth-wrap {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    // overflow-x: hidden;
+  }
+  .auth-card {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 44px 36px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 0 1px var(--border);
+    animation: fadeUp .6s ease-out;
+    overflow: hidden;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .auth-card h1 {
+    font-size: 26px;
+    text-align: center;
+    margin-bottom: 24px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), #e17055);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .auth-card .subtitle {
+    text-align: center;
+    color: var(--sub);
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
+  .auth-card label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #555;
+  }
+  .auth-card input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    margin-bottom: 14px;
+    transition: all .3s;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+  .auth-card input:focus {
+    border-color: var(--accent);
+    background: var(--card-solid);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+  }
+  .auth-card .btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-card .btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0; transition: opacity .3s;
+  }
+  .auth-card .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+  .auth-card .btn:hover::after { opacity: 1; }
+  .auth-card .btn:active { transform: translateY(0); }
+  .auth-card .toggle {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--sub);
+  }
+  .auth-card .toggle a {
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .auth-card .error { background: var(--error-bg); color: var(--danger); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 14px; display: none; }
+  .auth-card .error.success { background: var(--success-bg); color: var(--success); }
+
+  /* Main */
+  .app {
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 10;
+  }
+  .header .greeting { font-weight: 700; font-size: 16px; }
+
+  /* Action icons */
+  .header-btns {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .icon-btn {
+    background: none; border: none; font-size: 20px; cursor: pointer;
+    padding: 4px 8px; border-radius: 8px; transition: all .2s;
+  }
+  .icon-btn:hover { background: var(--tag-bg); }
+
+  /* Desktop layout: sidebar */
+  .app-layout {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  .app-main {
+    flex: 1;
+    min-width: 0;
+  }
+  .app-sidebar {
+    display: none;
+    width: 220px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 10px;
+    align-self: flex-start;
+  }
+
+  /* Sidebar user card */
+  .sidebar-user-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    text-align: center;
+  }
+  .sidebar-avatar {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 28px;
+    margin: 0 auto 12px;
+    transition: transform .2s;
+  }
+  .sidebar-avatar:hover { transform: scale(1.08); }
+  .sidebar-name {
+    font-weight: 700; font-size: 16px; color: var(--text);
+    margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .sidebar-email {
+    font-size: 12px; color: var(--sub);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 16px;
+  }
+  .sidebar-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sidebar-actions button {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--text);
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .sidebar-actions button:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .sidebar-actions .danger-btn:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+
+  /* Mobile: simple header */
+  @media (max-width: 540px) {
+    .app { max-width: 100%; }
+    .app-layout { display: block; }
+    .app-sidebar { display: none !important; }
+    .header .greeting { display: block; }
+    .header .logout-btn {
+      padding: 7px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: none;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--sub);
+      transition: all .2s;
+    }
+    .header .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+  }
+
+  /* Wide: sidebar layout */
+  @media (min-width: 860px) {
+    .app { max-width: 100%; }
+    .app-layout { display: flex; }
+    .app-sidebar { display: block; }
+    .header { display: none; }
+    #heatmap-card { top: 10px; }
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: fadeUp .5s ease-out;
+    overflow: hidden;
+  }
+  .card h2 { font-size: 15px; margin-bottom: 14px; font-weight: 700; }
+
+  /* Mood picker */
+  .moods {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .mood-btn {
+    aspect-ratio: auto;
+    padding: 8px 4px;
+    font-size: 28px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg);
+    cursor: pointer;
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+  .mood-btn .mood-emoji { line-height: 1; }
+  .mood-btn .mood-text { font-size: 11px; color: var(--sub); line-height: 1; }
+    position: relative;
+  }
+  .mood-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 20px var(--accent-glow);
+  }
+  .mood-btn.active {
+    border-color: var(--accent);
+    background: var(--tag-hl-bg);
+    transform: scale(1.08);
+    box-shadow: 0 0 20px var(--accent-glow);
+    animation: pulse .6s ease-out;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    100% { box-shadow: 0 0 0 12px transparent; }
+  }
+
+  .mood-btn.active .mood-text { color: var(--accent); }
+
+  /* Inputs */
+  textarea, input[type="text"], input[type="email"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 15px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    background: var(--input-bg);
+    color: var(--text);
+    transition: border .2s, background .35s;
+    margin-bottom: 12px;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="email"]:focus {
+    border-color: var(--accent);
+    background: var(--card);
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .submit-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0; transition: opacity .3s;
+  }
+  .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px var(--accent-glow); }
+  .submit-btn:hover::after { opacity: 1; }
+  .submit-btn:active { transform: translateY(0); }
+  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* History */
+  .mood-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--item-border);
+    align-items: flex-start;
+    transition: all .2s;
+  }
+  .mood-item:last-child { border-bottom: none; }
+  .mood-item .emoji { font-size: 36px; flex-shrink: 0; transition: transform .3s; }
+  @media (hover: hover) {
+    .mood-item:hover { background: var(--input-bg); margin: 0 -12px; padding: 16px 12px; border-radius: var(--radius-sm); }
+    .mood-item:hover .emoji { transform: scale(1.1); }
+  }
+  .mood-item .body { flex: 1; min-width: 0; overflow: hidden; }
+  .mood-item .note { font-size: 15px; margin-bottom: 4px; word-break: break-word; overflow-wrap: break-word; }
+  .mood-item .meta { font-size: 12px; color: var(--sub); display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .mood-item .actions { display: none; gap: 4px; flex-shrink: 0; }
+  .mood-item .actions button {
+    background: none;
+    border: none;
+    font-size: 14px;
+    color: var(--sub);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    transition: all .2s;
+    line-height: 1;
+  }
+  .mood-item .actions button:hover { color: var(--accent); }
+  .mood-item .actions .del:hover { color: var(--danger); }
+
+  /* 显示操作按钮的方式 */
+  .mood-item:hover .actions,
+  .mood-item:focus-within .actions { display: flex; }
+  /* 手机端：点击显示编辑删除 */
+  @media (hover: none) {
+    .mood-item .actions { display: none; position: absolute; top: 8px; right: 0; }
+    .mood-item .actions.show { display: flex; }
+    .mood-item { position: relative; }
+  }
+
+  /* Image upload */
+  .img-upload-area {
+    margin-bottom: 14px;
+  }
+  .img-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--sub);
+    transition: all .2s;
+    background: var(--input-bg);
+  }
+  .img-upload-label:hover { border-color: var(--accent); color: var(--accent); }
+  .img-preview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .img-preview-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--input-bg);
+  }
+  .img-preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .img-preview-item .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s;
+    line-height: 1;
+  }
+  .img-preview-item .remove-btn:hover { background: var(--danger); }
+
+  /* History images */
+  .mood-images {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .mood-images img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  .mood-images img:hover { transform: scale(1.03); }
+
+  /* 1张图：宽度100%，高度自适应 */
+  .mood-images.count-1 {
+    display: block;
+  }
+  .mood-images.count-1 img {
+    width: 100%;
+    aspect-ratio: auto;
+    max-height: 500px;
+    object-fit: cover;
+  }
+
+  /* 2张图：一排2列 */
+  .mood-images.count-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  /* 4张图：2x2 网格 */
+  .mood-images.count-4 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .mood-images.count-4 img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  .mood-images.count-4 img:hover { transform: scale(1.03); }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.88);
+    display: flex; align-items: center; justify-content: center;
+    animation: lb-fade .2s;
+  }
+  .lightbox img {
+    max-width: 90vw; max-height: 85vh;
+    object-fit: contain; border-radius: 6px;
+    user-select: none;
+  }
+  .lb-close {
+    position: absolute; top: 16px; right: 20px;
+    background: none; border: none; color: #fff;
+    font-size: 30px; cursor: pointer; opacity: .7;
+    transition: opacity .2s; line-height: 1;
+  }
+  .lb-close:hover { opacity: 1; }
+  .lb-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.15); border: none; color: #fff;
+    font-size: 28px; cursor: pointer; width: 48px; height: 48px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    transition: background .2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lb-arrow:hover { background: rgba(255,255,255,0.3); }
+  .lb-arrow.lb-prev { left: 16px; }
+  .lb-arrow.lb-next { right: 16px; }
+  .lb-counter {
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: rgba(255,255,255,0.7); font-size: 14px;
+  }
+  @keyframes lb-fade { from { opacity: 0 } to { opacity: 1 } }
+
+  /* Loader */
+  .loader { text-align: center; padding: 20px; color: var(--sub); font-size: 14px; }
+  .empty { text-align: center; padding: 40px 20px; color: var(--sub); font-size: 15px; }
+  .empty .big-emoji { font-size: 48px; display: block; margin-bottom: 10px; }
+
+  .toast {
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: var(--toast-bg); color: var(--toast-text); padding: 12px 24px;
+    border-radius: 24px; font-size: 13px; font-weight: 600; z-index: 999;
+    opacity: 0; transition: all .3s cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    backdrop-filter: blur(10px);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-4px); }
+
+  .theme-fab {
+    position: fixed; top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    font-size: 20px; cursor: pointer; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .theme-fab:hover { transform: scale(1.12) rotate(15deg); box-shadow: 0 4px 20px var(--accent-glow); }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .app { padding: 16px 10px 60px; }
+    .card { padding: 16px 14px; }
+    .header { padding: 12px 14px; border-radius: var(--radius-sm); }
+    .moods { grid-template-columns: repeat(4,1fr); gap: 6px; }
+    .mood-btn { font-size: 24px; padding: 6px 4px; }
+    .mood-btn .mood-text { font-size: 10px; }
+    .icon-btn { font-size: 18px; }
+    .auth-card { padding: 28px 20px; }
+    .auth-card h1 { font-size: 24px; }
+    .mood-item { gap: 8px; }
+    .mood-item .emoji { font-size: 30px; }
+    .mood-item .actions button { font-size: 13px; }
+  }
+
+  @media (max-width: 540px) {
+    .header .logout-btn {
+      padding: 7px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      background: none;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--sub);
+      transition: all .2s;
+    }
+    .header .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+  }
+
+  @media (max-width: 360px) {
+    .moods { grid-template-columns: repeat(3,1fr); }
+    .header-btns { display: flex; gap: 4px; }
+    .auth-card { padding: 24px 16px; }
+  }
+
+  /* Tablet */
+  @media (min-width: 541px) and (max-width: 859px) {
+    .moods { grid-template-columns: repeat(6,1fr); }
+    .app { max-width: 540px; }
+  }
+
+  /* Desktop: wider layout for sidebar */
+  @media (min-width: 860px) {
+    .app { max-width: 900px; }
+    .app-main { max-width: 620px; }
+    .moods { grid-template-columns: repeat(6,1fr); }
+  }
+
+  /* Heatmap */
+  #heatmap-card { position: static; }
+  #heatmap-outer { display: flex; overflow: hidden; }
+  #heatmap-left {
+    display: grid;
+    grid-template-rows: 22px repeat(7, 14px);
+    gap: 3px;
+    width: 36px;
+    flex-shrink: 0;
+    background: var(--card-solid);
+    z-index: 2;
+    position: relative;
+  }
+  #heatmap-scroll-container { overflow-x: auto; flex: 1; padding-bottom: 8px; }
+  #heatmap-grid { display: inline-grid; grid-template-rows: 22px repeat(7, 14px); gap: 3px; align-items: center; }
+  .heatmap-month-cell {
+    font-size: 11px;
+    color: var(--sub);
+    white-space: nowrap;
+    overflow: visible;
+    text-align: left;
+    width: 13px;
+    flex-shrink: 0;
+  }
+  .heatmap-week-row {
+    display: flex;
+    gap: 3px;
+    align-items: center;
+  }
+  .heatmap-day-label {
+    width: 28px;
+    height: 14px;
+    font-size: 10px;
+    color: var(--sub);
+    text-align: right;
+    padding-right: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .heatmap-cell {
+    width: 13px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--heat-0, #ebedf0);
+    transition: background 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+  .heatmap-cell:hover {
+    outline: 1px solid var(--accent);
+    outline-offset: 1px;
+  }
+  .heatmap-cell[data-level="0"] { background: var(--heat-0, #ebedf0); }
+  .heatmap-cell[data-level="1"] { background: var(--heat-1, #e9d8fd); }
+  .heatmap-cell[data-level="2"] { background: var(--heat-2, #c4b5fd); }
+  .heatmap-cell[data-level="3"] { background: var(--heat-3, #a78bfa); }
+  .heatmap-cell[data-level="4"] { background: var(--heat-4, #6c5ce7); }
+
+  [data-theme="dark"] .heatmap-cell[data-level="0"] { background: var(--heat-0, #161b22); }
+  [data-theme="dark"] .heatmap-cell[data-level="1"] { background: var(--heat-1, #1e0933); }
+  [data-theme="dark"] .heatmap-cell[data-level="2"] { background: var(--heat-2, #3b1f6e); }
+  [data-theme="dark"] .heatmap-cell[data-level="3"] { background: var(--heat-3, #7c3aed); }
+  [data-theme="dark"] .heatmap-cell[data-level="4"] { background: var(--heat-4, #a78bfa); }
+
+  .heatmap-tooltip {
+    position: fixed;
+    background: #24292e;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    pointer-events: none;
+    z-index: 10000;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+</style>
+</head>
+<body>
+
+<!-- Auth -->
+<div id="auth-section" class="auth-wrap">
+  <button class="theme-fab" onclick="toggleTheme()" id="auth-theme-btn">🌙</button>
+  <div class="auth-card">
+    <h1 id="auth-title">😊 登录你的账号</h1>
+    <div class="error" id="auth-error"></div>
+    <label for="auth-email">邮箱</label>
+    <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
+    <label for="auth-password">密码</label>
+    <input type="password" id="auth-password" placeholder="至少 6 位" autocomplete="current-password">
+    <button class="btn" id="auth-submit" onclick="handleAuth()">登录</button>
+    <p class="toggle" id="auth-toggle">
+      没有账号？<a onclick="toggleAuthMode()">去注册</a>
+    </p>
+    <p id="forgot-link" style="text-align:center;margin-top:10px;font-size:13px;">
+      <a onclick="showResetPassword()" style="color:var(--sub);cursor:pointer;">忘记密码？</a>
+    </p>
+  </div>
+</div>
+
+<!-- Reset Password -->
+<div id="reset-section" class="auth-wrap" style="display:none">
+  <button class="theme-fab" onclick="toggleTheme()">🌙</button>
+  <div class="auth-card">
+    <h1>🔑 重置密码</h1>
+    <div class="error" id="reset-error"></div>
+    <label for="reset-email">邮箱</label>
+    <input type="email" id="reset-email" placeholder="输入注册时的邮箱" autocomplete="email">
+    <button class="btn" id="reset-submit" onclick="handleResetPassword()">发送重置链接</button>
+    <p class="toggle">
+      <a onclick="showLogin()">← 返回登录</a>
+    </p>
+  </div>
+</div>
+
+<!-- New Password (after clicking reset link) -->
+<div id="newpw-section" class="auth-wrap" style="display:none">
+  <button class="theme-fab" onclick="toggleTheme()">🌙</button>
+  <div class="auth-card">
+    <h1>🔐 设置新密码</h1>
+    <div class="error" id="newpw-error"></div>
+    <label for="newpw-password">新密码</label>
+    <input type="password" id="newpw-password" placeholder="至少 6 位" autocomplete="new-password">
+    <label for="newpw-confirm">确认密码</label>
+    <input type="password" id="newpw-confirm" placeholder="再输入一次" autocomplete="new-password">
+    <button class="btn" id="newpw-submit" onclick="handleNewPassword()">设置新密码</button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app-section" class="app" style="display:none">
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+      <div id="mobile-avatar" onclick="toggleProfile()" style="
+        width:36px;height:36px;border-radius:50%;flex-shrink:0;
+        background:linear-gradient(135deg,var(--accent),#a29bfe);
+        display:flex;align-items:center;justify-content:center;
+        color:#fff;font-weight:700;font-size:16px;overflow:hidden;cursor:pointer;
+      "></div>
+      <div style="min-width:0;">
+        <div id="mobile-name" style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+        <div id="mobile-email" style="font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+      </div>
+    </div>
+    <div class="header-btns">
+      <button class="icon-btn" onclick="toggleTheme()" title="切换主题" id="theme-btn">🌙</button>
+      <button class="icon-btn" onclick="toggleProfile()" title="编辑资料" id="edit-btn">✏️</button>
+      <button class="logout-btn" onclick="logout()">退出</button>
+    </div>
+  </div>
+
+  <!-- Desktop: sidebar + main -->
+  <div class="app-layout">
+    <div class="app-main">
+      <!-- Write -->
+      <div class="card" id="write-card">
+        <h2 id="write-title">记录此刻心情</h2>
+        <div class="moods" id="mood-picker"></div>
+        <textarea id="mood-note" rows="3" placeholder="写点什么...（选填）"></textarea>
+        <div class="img-upload-area">
+          <label class="img-upload-label" onclick="document.getElementById('img-input').click()">
+            📷 添加图片（最多 9 张）
+          </label>
+          <input type="file" id="img-input" accept="image/*" multiple hidden onchange="handleImageSelect(event)">
+          <div class="img-preview-grid" id="img-preview"></div>
+        </div>
+        <button class="submit-btn" id="submit-btn" onclick="submitMood()">记录 ✨</button>
+        <input type="hidden" id="edit-id">
+      </div>
+
+      <!-- Heatmap -->
+      <div class="card" id="heatmap-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <h2 style="margin-bottom:0;">心情热力图</h2>
+          <span id="heatmap-streak" style="font-size:13px;color:var(--sub);"></span>
+        </div>
+        <div id="heatmap-outer" style="display:flex;overflow:hidden;">
+          <!-- 固定左侧：月份标签 + 星期标签 -->
+          <div id="heatmap-left" style="flex-shrink:0;width:36px;display:flex;flex-direction:column;z-index:2;position:relative;"></div>
+          <!-- 可滚动右侧：热力内容 -->
+          <div style="overflow-x:auto;flex:1;padding-bottom:8px;" id="heatmap-scroll-container">
+            <div id="heatmap-grid" style="display:inline-flex;flex-direction:column;gap:3px;"></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:8px;font-size:12px;color:var(--sub);gap:6px;">
+          <div style="display:flex;gap:3px;" id="heatmap-legend"></div>
+          <span>多</span>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <h2 id="history-title" style="margin-bottom:0;">共 0 条心情</h2>
+          <div id="mode-switcher" style="display:flex;gap:0;"></div>
+        </div>
+        <div id="history-list"></div>
+      </div>
+    </div>
+
+    <!-- Sidebar (desktop only) -->
+    <div class="app-sidebar">
+      <div class="sidebar-user-card">
+        <div class="sidebar-avatar" id="sidebar-avatar" onclick="toggleProfile()" style="cursor:pointer;"></div>
+        <div class="sidebar-name" id="sidebar-name"></div>
+        <div class="sidebar-email" id="sidebar-email"></div>
+        <div class="sidebar-actions">
+          <button onclick="toggleProfile()">✏️ 编辑资料</button>
+          <button onclick="toggleTheme()" id="sidebar-theme-btn">🌙 切换主题</button>
+          <button class="danger-btn" onclick="logout()">🚪 退出登录</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Profile Modal -->
+<div id="profile-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;animation:lb-fade .2s;">
+  <div style="
+    background:var(--card-solid);
+    border-radius:var(--radius);
+    padding:32px 28px;
+    width:90%;
+    max-width:380px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.2);
+    position:relative;
+  ">
+    <button onclick="closeProfileModal()" style="
+      position:absolute;top:14px;right:16px;background:none;border:none;
+      font-size:22px;cursor:pointer;color:var(--sub);line-height:1;
+    ">&times;</button>
+    <h2 style="font-size:17px;font-weight:700;margin-bottom:20px;text-align:center;">编辑资料</h2>
+    <!-- Avatar upload -->
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="position:relative;display:inline-block;cursor:pointer;" onclick="document.getElementById('avatar-input').click()">
+        <div id="profile-avatar-preview" style="
+          width:80px;height:80px;border-radius:50%;
+          background:linear-gradient(135deg,var(--accent),#a29bfe);
+          display:flex;align-items:center;justify-content:center;
+          color:#fff;font-weight:700;font-size:32px;
+          overflow:hidden;margin:0 auto;
+          transition:transform .2s;
+        "></div>
+        <div style="
+          position:absolute;bottom:0;right:-4px;
+          width:28px;height:28px;border-radius:50%;
+          background:var(--accent);color:#fff;font-size:14px;
+          display:flex;align-items:center;justify-content:center;
+          border:2px solid var(--card-solid);
+        ">📷</div>
+        <input type="file" id="avatar-input" accept="image/*" hidden onchange="handleAvatarSelect(event)">
+      </div>
+    </div>
+    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#555">昵称</label>
+    <input type="text" id="profile-name" placeholder="给自己起个名字" maxlength="20" style="margin-bottom:16px">
+    <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#555">邮箱</label>
+    <input type="email" id="profile-email" placeholder="输入新邮箱" style="margin-bottom:6px">
+    <div id="email-change-hint" style="font-size:12px;color:var(--sub);margin-bottom:16px;display:none;">修改邮箱后，需要到新邮箱点击确认链接才会生效</div>
+    <button class="submit-btn" onclick="saveProfile()">保存资料</button>
+  </div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+// 替换为你的 Supabase 项目 URL 和 anon key
+const SUPABASE_URL = 'https://dqsfmqsjjifzqwdluwry.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_Q3K48_BtjJIKKsUYvCPu4Q_wQSeC4Qe'
+
+// ==================== STATE ====================
+let currentUser = null
+let editingId = null
+let moodsList = []
+let selectedMood = null
+let pendingImages = []   // 待上传的图片 File 对象数组
+const MAX_IMAGES = 9
+let heatmapFilterDate = null  // 热力图筛选日期，null=不过滤
+
+// Mood config
+const MOODS = [
+  { emoji: '😄', label: '开心', color: '#ffd700' },
+  { emoji: '😌', label: '平静', color: '#a8e6cf' },
+  { emoji: '😢', label: '难过', color: '#74b9ff' },
+  { emoji: '😡', label: '生气', color: '#ff7675' },
+  { emoji: '😰', label: '焦虑', color: '#dfe6e9' },
+  { emoji: '🤩', label: '兴奋', color: '#fd79a8' },
+  { emoji: '😴', label: '疲惫', color: '#b2bec3' },
+  { emoji: '🥰', label: '幸福', color: '#fab1a0' },
+  { emoji: '😞', label: '沮丧', color: '#81ecec' },
+  { emoji: '🤔', label: '迷茫', color: '#ffeaa7' },
+  { emoji: '😤', label: '烦躁', color: '#fab1a0' },
+  { emoji: '😎', label: '自信', color: '#55efc4' },
+]
+
+// ==================== IMAGE HELPERS ====================
+function handleImageSelect(event) {
+  const files = Array.from(event.target.files)
+  const remaining = MAX_IMAGES - pendingImages.length
+  if (remaining <= 0) { showToast(`最多 ${MAX_IMAGES} 张图片`); return }
+  const toAdd = files.slice(0, remaining)
+  if (files.length > remaining) { showToast(`最多 ${MAX_IMAGES} 张，已自动截取前 ${remaining} 张`)}
+  pendingImages = [...pendingImages, ...toAdd]
+  renderImgPreview()
+  event.target.value = ''  // 允许重复选同一文件
+}
+
+function renderImgPreview() {
+  const grid = document.getElementById('img-preview')
+  if (pendingImages.length === 0) { grid.innerHTML = ''; return }
+  grid.innerHTML = pendingImages.map((f, i) => {
+    const url = URL.createObjectURL(f)
+    return `
+      <div class="img-preview-item">
+        <img src="${url}" alt="预览">
+        <button class="remove-btn" onclick="removePendingImg(${i})">×</button>
+      </div>`
+  }).join('')
+}
+
+function removePendingImg(index) {
+  pendingImages.splice(index, 1)
+  renderImgPreview()
+}
+
+// 上传 pendingImages 到 Supabase Storage，返回 URL 数组
+async function uploadImages() {
+  if (pendingImages.length === 0) return []
+  showToast(`正在上传 ${pendingImages.length} 张图片...`)
+  const urls = []
+  for (const file of pendingImages) {
+    const ext = file.name.split('.').pop() || 'jpg'
+    const path = `moods/${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
+    const { data, error } = await sb.storage.from('moods').upload(path, file, {
+      cacheControl: '3600',
+      upsert: false
+    })
+    if (error) { showToast('上传失败: ' + error.message); return null }
+    const { data: { publicUrl } } = sb.storage.from('moods').getPublicUrl(data.path)
+    urls.push(publicUrl)
+  }
+  showToast(`${pendingImages.length} 张图片上传成功 ✅`)
+  return urls
+}
+
+function clearImgState() {
+  pendingImages = []
+  renderImgPreview()
+}
+
+function timeAgo(dateStr) {
+  const now = Date.now()
+  const then = new Date(dateStr).getTime()
+  const diff = Math.floor((now - then) / 1000)
+  if (diff < 60) return '刚刚'
+  if (diff < 3600) return Math.floor(diff / 60) + '分钟前'
+  if (diff < 86400) return Math.floor(diff / 3600) + '小时前'
+  if (diff < 172800) return '昨天'
+  if (diff < 604800) return Math.floor(diff / 86400) + '天前'
+  const d = new Date(dateStr)
+  return (d.getMonth() + 1) + '月' + d.getDate() + '日'
+}
+
+// ==================== LIGHTBOX ====================
+let lbIndex = 0
+let lbMoodStart = 0, lbMoodEnd = 0
+
+function openLightbox(idx) {
+  lbIndex = idx
+  // 找到当前图片所属的心情，确定图片范围
+  const map = window._moodImagesMap || []
+  let found = false
+  for (let i = 0; i < map.length; i++) {
+    if (idx >= map[i].start && idx < map[i].start + map[i].count) {
+      lbMoodStart = map[i].start
+      lbMoodEnd = map[i].start + map[i].count
+      found = true
+      break
+    }
+  }
+  if (!found) { lbMoodStart = 0; lbMoodEnd = (window._allImages || []).length }
+  renderLightbox()
+}
+
+function closeLightbox() {
+  const el = document.getElementById('lightbox')
+  if (el) el.remove()
+  document.removeEventListener('keydown', lbKeyHandler)
+}
+
+function lbKeyHandler(e) {
+  if (e.key === 'Escape') closeLightbox()
+  else if (e.key === 'ArrowLeft') lbNav(-1)
+  else if (e.key === 'ArrowRight') lbNav(1)
+}
+
+function lbNav(dir) {
+  const imgs = window._allImages || []
+  if (imgs.length === 0) return
+  const next = lbIndex + dir
+  if (next < lbMoodStart) { showLbTip('已是本心情第一张'); return }
+  if (next >= lbMoodEnd) { showLbTip('已是本心情最后一张'); return }
+  lbIndex = next
+  renderLightbox()
+}
+
+// 在 lightbox 内显示提示
+function showLbTip(msg) {
+  let tip = document.getElementById('lb-tip')
+  if (!tip) {
+    tip = document.createElement('div')
+    tip.id = 'lb-tip'
+    tip.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;padding:8px 20px;border-radius:20px;font-size:14px;font-weight:600;z-index:2;opacity:0;transition:opacity .3s;pointer-events:none;'
+    const lb = document.getElementById('lightbox')
+    if (lb) lb.appendChild(tip)
+  }
+  tip.textContent = msg
+  tip.style.opacity = '1'
+  clearTimeout(tip._t)
+  tip._t = setTimeout(() => { tip.style.opacity = '0' }, 1500)
+}
+
+function renderLightbox() {
+  const imgs = window._allImages || []
+  let el = document.getElementById('lightbox')
+  if (!el) {
+    el = document.createElement('div')
+    el.id = 'lightbox'
+    el.className = 'lightbox'
+    el.onclick = (e) => { if (e.target === el) closeLightbox() }
+    document.body.appendChild(el)
+    document.addEventListener('keydown', lbKeyHandler)
+  }
+  const hasPrev = lbIndex > lbMoodStart
+  const hasNext = lbIndex < lbMoodEnd - 1
+  el.innerHTML = `
+    <button class="lb-close" onclick="closeLightbox()">&times;</button>
+    ${hasPrev ? '<button class="lb-arrow lb-prev" onclick="lbNav(-1)">‹</button>' : ''}
+    <img src="${imgs[lbIndex]}" alt="预览">
+    ${hasNext ? '<button class="lb-arrow lb-next" onclick="lbNav(1)">›</button>' : ''}
+    <div class="lb-counter">${lbIndex - lbMoodStart + 1} / ${lbMoodEnd - lbMoodStart}</div>
+  `
+}
+
+// 手机端点击心情条目切换操作按钮显示
+function toggleMobileActions(event, el) {
+  if (event.target.closest('.actions')) return
+  if (event.target.tagName === 'IMG') return
+  const actions = el.querySelector('.actions')
+  if (actions) actions.classList.toggle('show')
+}
+
+function translateError(msg) {
+  const map = {
+    'email rate limit exceeded': '操作太频繁，请等 1-2 分钟再试',
+    'Email rate limit exceeded': '操作太频繁，请等 1-2 分钟再试',
+    'User already registered': '该邮箱已注册，请直接登录或换一个邮箱',
+    'Email not confirmed': '邮箱尚未确认，请查收邮件点击确认链接后再登录',
+    'Invalid login credentials': '邮箱或密码错误',
+    'new email must be different': '新邮箱不能和当前邮箱相同',
+    'email address is invalid': '邮箱格式不正确',
+    'User not found': '用户不存在',
+    'Password should be at least': '密码至少 6 位',
+    'New password should be different': '新密码不能和旧密码相同',
+    'Token has expired or is invalid': '重置链接已过期，请重新发送',
+    'Error sending reset password link': '发送重置邮件失败，请稍后重试',
+    'For security purposes, you can only request this once': '请求太频繁，请稍后再试',
+    'Unable to validate email address': '邮箱格式不正确',
+    'Signup is disabled': '暂不支持注册',
+    'Signups not allowed': '暂不支持注册',
+    'Network request failed': '网络连接失败，请检查网络',
+    'Failed to fetch': '网络连接失败，请检查网络',
+  }
+  for (const [en, zh] of Object.entries(map)) {
+    if (msg.includes(en)) return zh
+  }
+  return msg
+}
+
+// ==================== RENDER HELPERS ====================
+function renderMoodPicker() {
+  const picker = document.getElementById('mood-picker')
+  picker.innerHTML = MOODS.map(m =>
+    `<button class="mood-btn${selectedMood === m.emoji ? ' active' : ''}" onclick="selectMood('${m.emoji}')">
+      <span class="mood-emoji">${m.emoji}</span>
+      <span class="mood-text">${m.label}</span>
+    </button>`
+  ).join('')
+}
+
+// ==================== PROFILE ====================
+let profileName = ''
+let currentPage = 1
+const PAGE_SIZE = 20
+let hasMore = true
+let totalMoodsCount = 0  // 所有心情的总条数
+let loadMode = 'more'  // 'more' = 加载更多, 'page' = 分页
+
+function toggleProfile() {
+  const modal = document.getElementById('profile-modal')
+  modal.style.display = 'flex'
+  document.getElementById('profile-name').value = profileName
+  document.getElementById('profile-email').value = currentUser.email
+  document.getElementById('email-change-hint').style.display = 'none'
+  renderAvatarPreview()
+}
+
+function closeProfileModal() {
+  document.getElementById('profile-modal').style.display = 'none'
+}
+
+function renderAvatarPreview() {
+  const preview = document.getElementById('profile-avatar-preview')
+  const avatarUrl = currentUser?.user_metadata?.avatar_url
+  if (avatarUrl) {
+    preview.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`
+  } else {
+    preview.innerHTML = ''
+    preview.textContent = (profileName || currentUser?.email || 'U').charAt(0).toUpperCase()
+  }
+}
+
+async function handleAvatarSelect(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) { showToast('头像不能超过 2MB'); return }
+  showToast('正在上传头像...')
+
+  // 先删除旧头像
+  const oldUrl = currentUser?.user_metadata?.avatar_url
+  if (oldUrl) {
+    try {
+      const u = new URL(oldUrl.split('?')[0])  // 去掉 ?t= 缓存参数
+      const parts = u.pathname.split('/')
+      const publicIdx = parts.indexOf('public')
+      if (publicIdx !== -1) {
+        const oldPath = parts.slice(publicIdx + 2).join('/')
+        await sb.storage.from('moods').remove([oldPath])
+      }
+    } catch (e) {
+      console.warn('旧头像删除失败:', e)
+    }
+  }
+
+  const ext = file.name.split('.').pop() || 'jpg'
+  const path = `avatars/${currentUser.id}/${Date.now()}.${ext}`
+  const { data, error } = await sb.storage.from('moods').upload(path, file, {
+    cacheControl: '3600', upsert: true
+  })
+  if (error) { showToast('头像上传失败: ' + error.message); return }
+  const { data: { publicUrl } } = sb.storage.from('moods').getPublicUrl(data.path)
+  const urlWithCache = publicUrl + '?t=' + Date.now()
+  await sb.auth.updateUser({ data: { avatar_url: urlWithCache } })
+  renderAvatarPreview()
+  updateHeader()
+  showToast('头像已更新 ✅')
+  event.target.value = ''
+}
+
+async function saveProfile() {
+  const name = document.getElementById('profile-name').value.trim()
+  const newEmail = document.getElementById('profile-email').value.trim()
+  const emailChanged = newEmail && newEmail.toLowerCase() !== currentUser.email.toLowerCase()
+
+  // 1. 更新昵称
+  if (name !== profileName) {
+    profileName = name
+    const { error } = await sb.auth.updateUser({
+      data: { display_name: name }
+    })
+    if (error) { showToast('昵称保存失败: ' + error.message); return }
+  }
+
+  // 2. 更新邮箱（如果改了）
+  if (emailChanged) {
+    const { data, error } = await sb.auth.updateUser({ email: newEmail })
+    if (error) {
+      showToast('邮箱修改失败: ' + translateError(error.message))
+      return
+    }
+    // Supabase 行为：
+    // - 开启邮箱验证：发确认邮件到新邮箱，提示用户去确认
+    // - 未开启：直接改，立即生效
+    // 通过检查 session 中的 email 是否已变来判断
+    const { data: { session } } = await sb.auth.getSession()
+    if (session?.user?.email === newEmail) {
+      // 未开启邮箱验证，直接生效
+      showToast('资料已更新 ✅')
+    } else {
+      // 开启了邮箱验证，需要确认
+      showToast('确认邮件已发送到新邮箱，请查收 ✉️')
+      document.getElementById('email-change-hint').style.display = 'block'
+      updateHeader()
+      return  // 不关闭弹窗，让用户看到提示
+    }
+  }
+
+  updateHeader()
+  closeProfileModal()
+  showToast('资料已更新 ✅')
+}
+
+function updateHeader() {
+  const name = profileName || currentUser.email
+  const avatarUrl = currentUser?.user_metadata?.avatar_url
+  const letter = (profileName || currentUser.email).charAt(0).toUpperCase()
+
+  // Mobile header
+  const mobileAvatar = document.getElementById('mobile-avatar')
+  const mobileName = document.getElementById('mobile-name')
+  const mobileEmail = document.getElementById('mobile-email')
+  if (mobileName) mobileName.textContent = profileName || '用户'
+  if (mobileEmail) mobileEmail.textContent = currentUser.email
+  if (mobileAvatar) {
+    if (avatarUrl) {
+      mobileAvatar.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`
+    } else {
+      mobileAvatar.innerHTML = ''
+      mobileAvatar.textContent = letter
+    }
+  }
+
+  // Sidebar (desktop)
+  const sbAvatar = document.getElementById('sidebar-avatar')
+  const sbName = document.getElementById('sidebar-name')
+  const sbEmail = document.getElementById('sidebar-email')
+  const sbTheme = document.getElementById('sidebar-theme-btn')
+  if (sbName) sbName.textContent = profileName || '用户'
+  if (sbEmail) sbEmail.textContent = currentUser.email
+  const theme = document.documentElement.getAttribute('data-theme')
+  if (sbTheme) sbTheme.textContent = (theme === 'dark' ? '☀️' : '🌙') + ' 切换主题'
+  if (sbAvatar) {
+    if (avatarUrl) {
+      sbAvatar.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+    } else {
+      sbAvatar.innerHTML = ''
+      sbAvatar.textContent = letter
+    }
+  }
+}
+
+function loadProfile() {
+  profileName = currentUser?.user_metadata?.display_name || ''
+  updateHeader()
+}
+
+function renderModeSwitcher() {
+  const wrap = document.getElementById('mode-switcher')
+  if (!wrap) return
+  const mkBtn = (mode, label, side) => {
+    const active = loadMode === mode
+    const base = `padding:4px 12px;font-size:12px;cursor:pointer;border:1.5px solid ${active ? 'var(--accent)' : 'var(--border)'};transition:all .2s;`
+    const radius = side === 'left' ? 'border-radius:16px 0 0 16px;' : 'border-radius:0 16px 16px 0;'
+    const borderExtra = side === 'right' ? 'border-left:none;' : ''
+    const bg = active ? 'background:var(--accent);color:#fff;font-weight:600;' : 'background:var(--card);color:var(--sub);font-weight:400;'
+    return `<button onclick="switchLoadMode('${mode}')" style="${base}${radius}${borderExtra}${bg}">${label}</button>`
+  }
+  wrap.innerHTML = mkBtn('more', '加载更多', 'left') + mkBtn('page', '分页', 'right')
+}
+
+// ==================== HEATMAP ====================
+// 存储热力墙的完整日期统计数据（独立于分页）
+let heatmapDateCount = {}
+
+async function loadAllMoodDates() {
+  // 加载所有心情的日期用于热力墙统计
+  const { data, error } = await sb.from('moods').select('created_at')
+  if (error) {
+    console.error('加载热力墙数据失败:', error)
+    return {}
+  }
+  // 统计每天的日期数量（使用本地时区）
+  const dateCount = {}
+  ;(data || []).forEach(m => {
+    const d = new Date(m.created_at)
+    const year = d.getFullYear()
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    const key = `${year}-${month}-${day}`
+    dateCount[key] = (dateCount[key] || 0) + 1
+  })
+  return dateCount
+}
+
+function renderHeatmap() {
+  const grid = document.getElementById('heatmap-grid')
+  const streakEl = document.getElementById('heatmap-streak')
+  if (!grid) return
+
+  // 计算最近一年的日期范围（从今天往前推365天）
+  const today = new Date()
+  const endDate = new Date(today)
+  const startDate = new Date(today)
+  startDate.setDate(startDate.getDate() - 364) // 365天包括今天
+
+  // 调整到最近的周日（GitHub风格是周日结束，但我们要周一开始）
+  // 我们要从周一开始，所以找到 startDate 之前的第一个周一
+  const dayOfWeek = startDate.getDay() // 0=周日, 1=周一, ..., 6=周六
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1 // 如果是周日，需要往前6天；否则往前(dayOfWeek-1)天
+  startDate.setDate(startDate.getDate() - daysToMonday)
+
+  // 使用已加载的日期统计数据
+  const dateCount = heatmapDateCount || {}
+
+  // 计算最大连续天数
+  let maxStreak = 0
+  let currentStreak = 0
+  const sortedDates = Object.keys(dateCount).sort()
+  for (let i = 0; i < sortedDates.length; i++) {
+    if (i === 0 || isConsecutiveDay(sortedDates[i-1], sortedDates[i])) {
+      currentStreak++
+      maxStreak = Math.max(maxStreak, currentStreak)
+    } else {
+      currentStreak = 1
+    }
+  }
+  if (streakEl) {
+    streakEl.textContent = maxStreak > 0 ? `最长连续 ${maxStreak} 天` : ''
+  }
+
+  // 生成周数组（每行是一周）
+  const weeks = []
+  let currentDate = new Date(startDate)
+  while (currentDate <= endDate) {
+    const week = []
+    for (let i = 0; i < 7; i++) {
+      if (currentDate > endDate) break
+      // 使用本地时区的日期
+      const year = currentDate.getFullYear()
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0')
+      const day = String(currentDate.getDate()).padStart(2, '0')
+      const key = `${year}-${month}-${day}`
+      const count = dateCount[key] || 0
+      week.push({
+        date: new Date(currentDate),
+        key: key,
+        count: count
+      })
+      currentDate.setDate(currentDate.getDate() + 1)
+    }
+    if (week.length > 0) {
+      weeks.push(week)
+    }
+  }
+
+  // 找到最大计数用于颜色分级
+  const maxCount = Math.max(1, ...Object.values(dateCount))
+
+  // 渲染月份标签
+  const monthLabels = []
+  let lastMonth = -1
+  weeks.forEach((week, wi) => {
+    const firstDate = week[0].date
+    const month = firstDate.getMonth()
+    if (month !== lastMonth) {
+      monthLabels.push({
+        weekIndex: wi,
+        month: month
+      })
+      lastMonth = month
+    }
+  })
+
+  // 渲染热力墙
+  // 第一行：月份标签（grid row 1）
+  const monthLabelRow = document.createElement('div')
+  monthLabelRow.style.cssText = 'display:flex;gap:3px;'
+  weeks.forEach((_, wi) => {
+    const label = monthLabels.find(m => m.weekIndex === wi)
+    const el = document.createElement('div')
+    el.className = 'heatmap-month-cell'
+    el.textContent = label ? ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'][label.month] : ''
+    monthLabelRow.appendChild(el)
+  })
+
+  // 创建7行（周一到周日）
+  const dayLabels = ['一', '二', '三', '四', '五', '六', '日']
+  const rows = []
+  for (let day = 0; day < 7; day++) {
+    const row = document.createElement('div')
+    row.className = 'heatmap-week-row'
+    row.style.cssText = 'display:flex;gap:3px;align-items:center;'
+
+    // 添加单元格（不再有dayLabel）
+    weeks.forEach(week => {
+      const cellData = week[day]
+      if (!cellData) {
+        // 空单元格（日期范围外的）
+        const empty = document.createElement('div')
+        empty.style.cssText = 'width:13px;height:13px;flex-shrink:0;'
+        row.appendChild(empty)
+        return
+      }
+
+      const cell = document.createElement('div')
+      const level = getHeatLevel(cellData.count, maxCount)
+      cell.className = 'heatmap-cell'
+      cell.setAttribute('data-level', level)
+      cell.title = `${cellData.key}: ${cellData.count} 条心情`
+
+      // Tooltip
+      cell.addEventListener('mouseenter', (e) => {
+        showHeatmapTooltip(e, cellData.key, cellData.count)
+      })
+      cell.addEventListener('mouseleave', () => {
+        hideHeatmapTooltip()
+      })
+
+      // Click to filter by date
+      cell.style.cursor = 'pointer'
+      cell.addEventListener('click', () => {
+        filterByDate(cellData.key)
+      })
+
+      row.appendChild(cell)
+    })
+
+    rows.push(row)
+  }
+
+  // 构建左侧独立容器 #heatmap-left
+  const leftCol = document.getElementById('heatmap-left')
+  if (leftCol) {
+    leftCol.innerHTML = ''
+    // spacer for month label row (grid row 1, height 22px)
+    const spacer = document.createElement('div')
+    spacer.style.cssText = 'height:22px;'
+    leftCol.appendChild(spacer)
+    // 7 day labels (grid rows 2-8, each 14px)
+    dayLabels.forEach((label, i) => {
+      const el = document.createElement('div')
+      el.className = 'heatmap-day-label'
+      el.textContent = (i % 2 === 0) ? label : ''
+      leftCol.appendChild(el)
+    })
+  }
+
+  // 清空并重新添加
+  grid.innerHTML = ''
+  grid.appendChild(monthLabelRow)
+  rows.forEach(row => grid.appendChild(row))
+
+  // 渲染图例
+  renderHeatmapLegend()
+
+  // 滚动到最右侧（最新日期）
+  const scrollContainer = document.getElementById('heatmap-scroll-container')
+  if (scrollContainer) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        scrollContainer.scrollLeft = scrollContainer.scrollWidth
+      })
+    })
+  }
+}
+
+function parseLocalDate(dateStr) {
+  // 正确解析本地时区的日期，避免时区偏移
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
+function isConsecutiveDay(dateStr1, dateStr2) {
+  const d1 = parseLocalDate(dateStr1)
+  const d2 = parseLocalDate(dateStr2)
+  const diff = (d2 - d1) / (1000 * 60 * 60 * 24)
+  return diff === 1
+}
+
+function getHeatLevel(count, maxCount) {
+  if (count === 0) return 0
+  if (count <= maxCount * 0.25) return 1
+  if (count <= maxCount * 0.5) return 2
+  if (count <= maxCount * 0.75) return 3
+  return 4
+}
+
+function showHeatmapTooltip(e, date, count) {
+  hideHeatmapTooltip()
+  const tip = document.createElement('div')
+  tip.className = 'heatmap-tooltip'
+  tip.id = 'heatmap-tooltip'
+  const d = parseLocalDate(date)  // 使用本地时区解析
+  const weekday = ['周日','周一','周二','周三','周四','周五','周六'][d.getDay()]
+  tip.innerHTML = `${date} ${weekday}<br>${count} 条心情`
+  document.body.appendChild(tip)
+
+  const rect = tip.getBoundingClientRect()
+  let left = e.clientX - rect.width / 2
+  let top = e.clientY - rect.height - 10
+  if (left < 0) left = 10
+  if (top < 0) top = e.clientY + 20
+  tip.style.left = left + 'px'
+  tip.style.top = top + 'px'
+}
+
+function hideHeatmapTooltip() {
+  const tip = document.getElementById('heatmap-tooltip')
+  if (tip) tip.remove()
+}
+
+function renderHeatmapLegend() {
+  const legend = document.getElementById('heatmap-legend')
+  if (!legend) return
+  legend.innerHTML = [0,1,2,3,4].map(level =>
+    `<div class="heatmap-cell" data-level="${level}" style="width:13px;height:13px;border-radius:2px;"></div>`
+  ).join('')
+}
+
+async function updateHeatmap() {
+  if (!document.getElementById('heatmap-card')) return
+  // 加载所有心情日期数据用于热力墙统计
+  heatmapDateCount = await loadAllMoodDates()
+  renderHeatmap()
+}
+
+// ==================== HISTORY ====================
+function renderHistory() {
+  const list = document.getElementById('history-list')
+  // 更新标题
+  const title = document.getElementById('history-title')
+  if (title) {
+    if (heatmapFilterDate) {
+      title.innerHTML = `${heatmapFilterDate} 的心情（${moodsList.length} 条）<button onclick="clearDateFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
+    } else {
+      title.textContent = `共 ${totalMoodsCount || moodsList.length} 条心情`
+    }
+  }
+  // 更新模式切换按钮
+  renderModeSwitcher()
+
+  if (moodsList.length === 0) {
+    list.innerHTML = `<div class="empty"><span class="big-emoji">📝</span>还没有记录，开始写第一条吧</div>`
+    return
+  }
+  // 收集所有图片及其全局索引，用于 lightbox 切换
+  window._allImages = []
+  window._moodImagesMap = []  // 每条心情的图片起止索引
+  moodsList.forEach(m => {
+    const imgs = m.images || []
+    const start = window._allImages.length
+    window._allImages.push(...imgs)
+    window._moodImagesMap.push({ start, count: imgs.length })
+  })
+
+  const totalCount = moodsList.reduce((s, m) => s + (m.images?.length || 0), 0)
+  const subInfo = ''
+  list.innerHTML = (subInfo ? `<div style="color:var(--sub);font-size:13px;margin-bottom:12px;">${subInfo.slice(1)}</div>` : '') +
+  moodsList.map((m, mi) => {
+    const mood = MOODS.find(x => x.emoji === m.mood) || { label: '未知' }
+    const time = timeAgo(m.created_at)
+    const images = m.images || []
+    let imgsHtml = '';
+    if (images.length > 0) {
+      const baseIdx = window._moodImagesMap[mi].start;
+      if (images.length === 1) {
+        imgsHtml = `<div class="mood-images count-1">
+          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+        </div>`;
+      } else if (images.length === 2) {
+        imgsHtml = `<div class="mood-images count-2">
+          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+          <img src="${images[1]}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
+        </div>`;
+      } else if (images.length === 4) {
+        imgsHtml = `<div class="mood-images count-4">
+          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+          <img src="${images[1]}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
+          <img src="${images[2]}" onclick="openLightbox(${baseIdx+2})" alt="心情图片">
+          <img src="${images[3]}" onclick="openLightbox(${baseIdx+3})" alt="心情图片">
+        </div>`;
+      } else {
+        imgsHtml = `
+        <div class="mood-images">
+          ${images.map((url, ii) => {
+            const globalIdx = baseIdx + ii;
+            return `<img src="${url}" onclick="openLightbox(${globalIdx})" alt="心情图片">`
+          }).join('')}
+        </div>`;
+      }
+    }
+    const imgsJson = JSON.stringify(images).replace(/"/g, '&quot;')
+    return `
+      <div class="mood-item" onclick="toggleMobileActions(event, this)">
+        <div class="emoji">${m.mood}</div>
+        <div class="body">
+          <div class="note">${m.note || '<span style="color:var(--sub)">无文字</span>'}</div>
+          ${imgsHtml}
+          <div class="meta">
+            <span>${time}</span>
+            ${editingId === m.id ? '<span style="color:var(--accent)">编辑中...</span>' : ''}
+          </div>
+        </div>
+        <div class="actions">
+          <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})" title="编辑">✏️</button>
+          <button class="del" onclick="deleteMood('${m.id}')" title="删除">🗑️</button>
+        </div>
+      </div>`
+  }).join('') + `
+    <div id="load-more-wrap" style="text-align:center;padding:18px 0 8px;">
+      ${loadMode === 'more'
+        ? (hasMore
+          ? `<button id="load-more-btn" style="
+              padding:10px 32px;
+              border:1.5px solid var(--border);
+              border-radius:25px;
+              background:var(--card);
+              color:var(--text);
+              font-size:15px;
+              cursor:pointer;
+              transition:all .2s;
+            " onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'" onclick="loadMore()">
+              ↓ 加载更多
+            </button>`
+          : (moodsList.length > 0 ? '<span style="color:var(--sub);font-size:14px;">—— 没有更多了 ——</span>' : ''))
+        : renderPageNav()
+      }
+    </div>`
+}
+
+async function loadMore() {
+  currentPage++
+  const btn = document.getElementById('load-more-btn')
+  btn.textContent = '加载中...'
+  btn.disabled = true
+  // 获取总数
+  const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+  totalMoodsCount = count || 0
+  const from = (currentPage - 1) * PAGE_SIZE
+  const to = currentPage * PAGE_SIZE - 1
+  const { data, error } = await sb.from('moods')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(from, to)
+  btn.textContent = '↓ 加载更多'
+  btn.disabled = false
+  if (error) { showToast('加载失败: ' + error.message); currentPage--; return }
+  hasMore = data.length >= PAGE_SIZE
+  moodsList = [...moodsList, ...data]
+  renderHistory()
+}
+
+async function goPage(page) {
+  currentPage = page
+  // 获取总数
+  const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+  totalMoodsCount = count || 0
+  const from = (currentPage - 1) * PAGE_SIZE
+  const to = currentPage * PAGE_SIZE - 1
+  const { data, error } = await sb.from('moods')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(from, to)
+  if (error) { showToast('加载失败: ' + error.message); currentPage--; return }
+  hasMore = data.length >= PAGE_SIZE
+  moodsList = data
+  renderHistory()
+  document.getElementById('history-list').scrollIntoView({ behavior: 'smooth' })
+}
+
+function switchLoadMode(mode) {
+  loadMode = mode
+  currentPage = 1
+  moodsList = []
+  loadMoods()
+}
+
+function renderPageNav() {
+  const prev = currentPage > 1
+  const next = hasMore
+  const pageStyle = `
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:36px;height:36px;padding:0 10px;
+    border:1.5px solid var(--border);border-radius:10px;
+    background:var(--card);color:var(--text);
+    font-size:14px;cursor:pointer;transition:all .2s;
+  `
+  const activePage = `
+    background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600;
+  `
+  const disabled = `
+    opacity:0.4;cursor:default;
+  `
+  let pages = ''
+  // 只显示当前页 + 已知的下一页
+  // 当前页始终显示
+  pages += `<span style="${pageStyle}${activePage}">${currentPage}</span>`
+  // 如果还有下一页，显示下一页按钮和省略号
+  if (hasMore) {
+    pages += `<button onclick="goPage(${currentPage + 1})" style="${pageStyle}">${currentPage + 1}</button>`
+    pages += `<span style="color:var(--sub);font-size:14px;padding:0 4px;">…</span>`
+  }
+  return `
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
+      ${prev
+        ? `<button onclick="goPage(${currentPage - 1})" style="${pageStyle}">‹</button>`
+        : `<span style="${pageStyle}${disabled}">‹</span>`}
+      ${pages}
+      ${next
+        ? `<button onclick="goPage(${currentPage + 1})" style="${pageStyle}">›</button>`
+        : `<span style="${pageStyle}${disabled}">›</span>`}
+    </div>
+  `
+}
+
+// ==================== AUTH ====================
+let authMode = 'login'
+
+function toggleAuthMode() {
+  const card = document.querySelector('.auth-card')
+  const isLogin = authMode === 'login'
+
+  // Step 1: flip out
+  const flipOut = card.animate([
+    { transform: 'perspective(600px) rotateY(0deg) scale(1)', opacity: 1, filter: 'blur(0)' },
+    { transform: 'perspective(600px) rotateY(-90deg) scale(0.9)', opacity: 0.3, filter: 'blur(4px)' },
+  ], { duration: 350, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' })
+
+  flipOut.onfinish = () => {
+    // Update UI
+    authMode = isLogin ? 'signup' : 'login'
+    const nowLogin = authMode === 'login'
+    document.getElementById('auth-title').textContent = nowLogin ? '😊 登录你的账号' : '🚀 创建你的账号'
+    document.getElementById('auth-submit').textContent = nowLogin ? '登录' : '注册'
+    document.getElementById('auth-toggle').innerHTML = nowLogin
+      ? '没有账号？<a onclick="toggleAuthMode()">去注册</a>'
+      : '已有账号？<a onclick="toggleAuthMode()">去登录</a>'
+    const err = document.getElementById('auth-error')
+    err.style.display = 'none'
+    err.className = 'error'
+
+    // Step 2: flip in
+    card.animate([
+      { transform: 'perspective(600px) rotateY(90deg) scale(0.9)', opacity: 0.3, filter: 'blur(4px)' },
+      { transform: 'none', opacity: 1, filter: 'blur(0)' },
+    ], { duration: 400, easing: 'cubic-bezier(.2,0,.4,1)', fill: 'forwards' })
+  }
+}
+
+async function handleAuth() {
+  if (!sb) {
+    showToast('Supabase 未初始化，请刷新页面')
+    return
+  }
+  const email = document.getElementById('auth-email').value.trim()
+  const password = document.getElementById('auth-password').value
+  const err = document.getElementById('auth-error')
+
+  if (!email || !password) {
+    err.textContent = '请填写邮箱和密码'
+    err.style.display = 'block'
+    return
+  }
+  if (password.length < 6) {
+    err.textContent = '密码至少 6 位'
+    err.style.display = 'block'
+    return
+  }
+
+  err.style.display = 'none'
+  err.className = 'error'
+  const btn = document.getElementById('auth-submit')
+  btn.disabled = true
+  btn.textContent = '处理中...'
+
+  try {
+    let res
+    if (authMode === 'signup') {
+      // signup request
+      res = await sb.auth.signUp({ email, password })
+      // signup response
+      if (res.error) {
+        err.textContent = translateError(res.error.message)
+        err.className = 'error'
+        err.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = '注册'
+        return
+      }
+      // 根据 Supabase 配置自动判断：
+      // - 未开启邮箱确认 → signUp 直接返回 session，onAuthStateChange 会自动切换界面
+      // - 已开启邮箱确认 → session 为 null，需提示用户去邮箱确认
+      if (res.data.session) {
+        showToast('注册成功 🎉')
+        // onAuthStateChange 会自动切换到主界面，这里不用额外操作
+      } else {
+        err.textContent = '注册成功！请去邮箱点击确认链接，然后返回这里登录。'
+        err.className = 'error success'
+        err.style.display = 'block'
+        authMode = 'login'
+        toggleAuthMode()
+        btn.disabled = false
+        return
+      }
+    } else {
+      res = await sb.auth.signInWithPassword({ email, password })
+      if (res.error) {
+        err.textContent = translateError(res.error.message)
+        err.className = 'error'
+        err.style.display = 'block'
+        btn.disabled = false
+        btn.textContent = '登录'
+        return
+      }
+      // on success, session listener will handle
+      showToast('登录成功 👋')
+    }
+    btn.disabled = false
+    btn.textContent = authMode === 'login' ? '登录' : '注册'
+  } catch (e) {
+    // auth error
+    const msg = e.name === 'AbortError' ? '请求超时（30 秒），supabase.co 在国内可能被墙，请尝试科学上网' : (e.message || '未知错误')
+    err.textContent = '网络错误：' + msg
+    err.className = 'error'
+    err.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = authMode === 'login' ? '登录' : '注册'
+  }
+}
+
+async function logout() {
+  await sb.auth.signOut()
+}
+
+function resetAuthForm() {
+  authMode = 'login'
+  document.getElementById('auth-title').textContent = '😊 登录你的账号'
+  document.getElementById('auth-submit').textContent = '登录'
+  document.getElementById('auth-toggle').innerHTML = '没有账号？<a onclick="toggleAuthMode()">去注册</a>'
+  document.getElementById('auth-email').value = ''
+  document.getElementById('auth-password').value = ''
+  const err = document.getElementById('auth-error')
+  err.style.display = 'none'
+  err.className = 'error'
+  document.getElementById('forgot-link').style.display = ''
+}
+
+function showResetPassword() {
+  document.getElementById('auth-section').style.display = 'none'
+  document.getElementById('reset-section').style.display = 'flex'
+  document.getElementById('reset-email').value = document.getElementById('auth-email').value || ''
+  const err = document.getElementById('reset-error')
+  err.style.display = 'none'
+  err.className = 'error'
+}
+
+function showLogin() {
+  document.getElementById('reset-section').style.display = 'none'
+  document.getElementById('newpw-section').style.display = 'none'
+  document.getElementById('auth-section').style.display = 'flex'
+}
+
+function showNewPassword() {
+  document.getElementById('auth-section').style.display = 'none'
+  document.getElementById('reset-section').style.display = 'none'
+  document.getElementById('newpw-section').style.display = 'flex'
+  setupAuthListener()
+}
+
+async function handleNewPassword() {
+  const password = document.getElementById('newpw-password').value
+  const confirm = document.getElementById('newpw-confirm').value
+  const err = document.getElementById('newpw-error')
+  const btn = document.getElementById('newpw-submit')
+
+  if (!password || password.length < 6) {
+    err.textContent = '密码至少 6 位'
+    err.className = 'error'
+    err.style.display = 'block'
+    return
+  }
+  if (password !== confirm) {
+    err.textContent = '两次密码不一致'
+    err.className = 'error'
+    err.style.display = 'block'
+    return
+  }
+
+  err.style.display = 'none'
+  btn.disabled = true
+  btn.textContent = '设置中...'
+
+  try {
+    const { error } = await sb.auth.updateUser({ password })
+    if (error) {
+      err.textContent = translateError(error.message)
+      err.className = 'error'
+      err.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = '设置新密码'
+      return
+    }
+    showToast('密码已重置 ✅')
+    // 重置成功，跳转到主界面
+    const { data: { session } } = await sb.auth.getSession()
+    if (session?.user) {
+      currentUser = session.user
+      loadProfile()
+      showAuth(false)
+      initScrollListeners()
+      renderMoodPicker()
+      await loadMoods()
+    } else {
+      showLogin()
+    }
+  } catch (e) {
+    const msg = e.name === 'AbortError' ? '请求超时，请重试' : (e.message || '未知错误')
+    err.textContent = '网络错误：' + msg
+    err.className = 'error'
+    err.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = '设置新密码'
+  }
+}
+
+async function handleResetPassword() {
+  const email = document.getElementById('reset-email').value.trim()
+  const err = document.getElementById('reset-error')
+  const btn = document.getElementById('reset-submit')
+
+  if (!email) {
+    err.textContent = '请输入邮箱'
+    err.style.display = 'block'
+    return
+  }
+
+  err.style.display = 'none'
+  btn.disabled = true
+  btn.textContent = '发送中...'
+
+  try {
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + window.location.pathname
+    })
+    if (error) {
+      err.textContent = translateError(error.message)
+      err.className = 'error'
+      err.style.display = 'block'
+      btn.disabled = false
+      btn.textContent = '发送重置链接'
+      return
+    }
+    err.textContent = '重置链接已发送到你的邮箱，请查收！'
+    err.className = 'error success'
+    err.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = '发送重置链接'
+  } catch (e) {
+    const msg = e.name === 'AbortError' ? '请求超时，请重试' : (e.message || '未知错误')
+    err.textContent = '网络错误：' + msg
+    err.className = 'error'
+    err.style.display = 'block'
+    btn.disabled = false
+    btn.textContent = '发送重置链接'
+  }
+}
+
+// ==================== MOOD CRUD ====================
+function selectMood(emoji) {
+  selectedMood = selectedMood === emoji ? null : emoji
+  renderMoodPicker()
+}
+
+
+function resetForm() {
+  selectedMood = null
+  editingId = null
+  document.getElementById('mood-note').value = ''
+  document.getElementById('edit-id').value = ''
+  document.getElementById('submit-btn').textContent = '记录 ✨'
+  document.getElementById('write-title').textContent = '记录此刻心情'
+  renderMoodPicker()
+  clearImgState()
+}
+
+async function submitMood() {
+  if (!selectedMood) {
+    showToast('请选择一个心情 😊')
+    return
+  }
+  const note = document.getElementById('mood-note').value.trim()
+  const btn = document.getElementById('submit-btn')
+  btn.disabled = true
+
+  // 先上传图片（如果有）
+  let imageUrls = []
+  if (pendingImages.length > 0) {
+    imageUrls = await uploadImages()
+    if (!imageUrls) { btn.disabled = false; return }  // 上传失败
+  }
+
+  if (editingId) {
+    // 编辑时：合并剩余已有图片 + 新上传的图片
+    const existing = window._editingImages || moodsList.find(m => m.id === editingId)?.images || []
+    const { error } = await sb.from('moods').update({
+      mood: selectedMood,
+      note: note || null,
+      images: [...existing, ...imageUrls],
+    }).eq('id', editingId)
+    if (error) { showToast('更新失败: ' + error.message); btn.disabled = false; return }
+    showToast('已更新 ✅')
+    window._editingImages = null
+  } else {
+    const { error } = await sb.from('moods').insert({
+      mood: selectedMood,
+      note: note || null,
+      images: imageUrls,
+    })
+    if (error) { showToast('保存失败: ' + error.message); btn.disabled = false; return }
+    showToast('已记录 💾')
+  }
+  resetForm()
+  btn.disabled = false
+  await loadMoods()
+}
+
+function editMood(id, mood, note, images) {
+  editingId = id
+  selectedMood = mood
+  document.getElementById('mood-note').value = note || ''
+  document.getElementById('edit-id').value = id
+  document.getElementById('submit-btn').textContent = '更新 ✏️'
+  document.getElementById('write-title').textContent = '编辑心情'
+  renderMoodPicker()
+
+  // 把已有图片载入 pendingImages（转为显示状态）
+  clearImgState()
+  if (images && images.length > 0) {
+    // 编辑时已有图片不放在 pendingImages（那是新上传的），而是直接渲染
+    // 用 data attribute 存已有图片 URL，提交时合并
+    document.getElementById('img-preview').innerHTML = images.map((url, i) => `
+      <div class="img-preview-item">
+        <img src="${url}" alt="已有图片">
+        <button class="remove-btn" onclick="removeExistingImg(${i}, '${id}')">×</button>
+      </div>`).join('')
+    // 暂存已有图片到全局，供提交时读取
+    window._editingImages = [...images]
+  }
+  renderHistory()
+  document.getElementById('write-card').scrollIntoView({ behavior: 'smooth' })
+}
+
+// 编辑时删除已有图片
+async function removeExistingImg(index, id) {
+  if (!confirm('确定删除这张图片？')) return
+  const m = moodsList.find(x => x.id === id)
+  if (!m) return
+  const newImages = [...(m.images || [])]
+  newImages.splice(index, 1)
+  const { error } = await sb.from('moods').update({ images: newImages }).eq('id', id)
+  if (error) { showToast('删除失败: ' + error.message); return }
+  showToast('图片已删除 🗑️')
+  await loadMoods()
+  editMood(id, m.mood, m.note, newImages)
+}
+
+async function deleteMood(id) {
+  if (!confirm('确定删除这条记录？')) return
+  // id 从 HTML 传入是字符串，数据库里是数字，需兼容匹配
+  const numId = Number(id)
+  const m = moodsList.find(x => x.id === numId || x.id == id)
+  // 先删 Storage 里的图片
+  const images = m?.images || []
+  if (images.length > 0) {
+    const paths = images.map(url => {
+      try {
+        // Supabase public URL 格式:
+        // https://<project>.supabase.co/storage/v1/object/public/<bucket>/<filePath>
+        // remove() 需要 bucket 内的相对路径，即 <filePath>
+        const cleanUrl = url.split('?')[0]  // 去掉 ?t= 等查询参数
+        const u = new URL(cleanUrl)
+        const parts = u.pathname.split('/')
+        const publicIdx = parts.indexOf('public')
+        if (publicIdx === -1) return null
+        // public 后第1个是 bucket 名，之后是文件路径
+        const filePath = parts.slice(publicIdx + 2).join('/')
+        return filePath || null
+      } catch (e) { return null }
+    }).filter(Boolean)
+    if (paths.length > 0) {
+      const { data, error: se } = await sb.storage.from('moods').remove(paths)
+      if (se) console.warn('Storage 删除失败:', se.message)
+    }
+  }
+  const { error } = await sb.from('moods').delete().eq('id', id)
+  if (error) { showToast('删除失败: ' + error.message); return }
+  showToast('已删除 🗑️')
+  if (editingId === id) resetForm()
+  await loadMoods()
+}
+
+async function loadMoods(append = false, filterDate = null) {
+  if (!append) { currentPage = 1 }
+  // 先获取总数（非筛选模式时）
+  if (!filterDate) {
+    const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
+    totalMoodsCount = count || 0
+  } else {
+    totalMoodsCount = 0
+  }
+  let query = sb.from('moods').select('*')
+  if (filterDate) {
+    // 按日期筛选：created_at >= filterDate 00:00:00 且 < 次日 00:00:00
+    const nextDate = new Date(filterDate)
+    nextDate.setDate(nextDate.getDate() + 1)
+    const nextDateStr = nextDate.toISOString().split('T')[0]
+    query = query.gte('created_at', filterDate + 'T00:00:00').lt('created_at', nextDateStr + 'T00:00:00')
+  } else {
+    const from = (currentPage - 1) * PAGE_SIZE
+    const to = currentPage * PAGE_SIZE - 1
+    query = query.order('created_at', { ascending: false }).range(from, to)
+  }
+  const { data, error } = await query
+  if (error) { showToast('加载失败: ' + error.message); return }
+  if (filterDate) {
+    moodsList = data
+    hasMore = false
+  } else {
+    hasMore = data.length >= PAGE_SIZE
+    if (append && loadMode === 'more') {
+      moodsList = [...moodsList, ...data]
+    } else {
+      moodsList = data
+    }
+  }
+  renderHistory()
+  if (!filterDate) updateHeatmap()
+}
+
+function filterByDate(date) {
+  if (heatmapFilterDate === date) {
+    clearDateFilter()
+    return
+  }
+  heatmapFilterDate = date
+  loadMoods(false, date)
+}
+
+function clearDateFilter() {
+  heatmapFilterDate = null
+  loadMoods()
+}
+
+// ==================== UI HELPERS ====================
+function showAuth(show) {
+  if (show) resetAuthForm()
+  document.getElementById('auth-section').style.display = show ? 'flex' : 'none'
+  document.getElementById('app-section').style.display = show ? 'none' : 'block'
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.classList.add('show')
+  clearTimeout(t._timeout)
+  t._timeout = setTimeout(() => t.classList.remove('show'), 2500)
+}
+
+// ==================== STARTUP ====================
+// CDN loaded check
+if (!window.supabase) {
+  document.getElementById('auth-error').textContent = '加载依赖失败，请刷新页面或检查网络'
+  document.getElementById('auth-error').style.display = 'block'
+  document.getElementById('auth-submit').disabled = true
+}
+
+// Supabase init — must be after all function definitions
+let sb = null
+try {
+  // 10 秒超时的自定义 fetch，防止国内网络请求挂着不动
+  const fetchWithTimeout = (url, opts) => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 30000)
+    return fetch(url, { ...opts, signal: opts?.signal || controller.signal }).finally(() => clearTimeout(timeout))
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true },
+    global: { fetch: fetchWithTimeout },
+  })
+} catch (e) {
+  document.getElementById('auth-error').textContent = '初始化失败：' + (e.message || '未知错误')
+  document.getElementById('auth-error').style.display = 'block'
+  document.getElementById('auth-submit').disabled = true
+}
+
+// ==================== THEME ====================
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light'
+  const next = current === 'light' ? 'dark' : 'light'
+  document.documentElement.setAttribute('data-theme', next)
+  const icon = next === 'dark' ? '☀️' : '🌙'
+  const btn = document.getElementById('theme-btn')
+  const authBtn = document.getElementById('auth-theme-btn')
+  if (btn) btn.textContent = icon
+  if (authBtn) authBtn.textContent = icon
+  localStorage.setItem('mood-theme', next)
+}
+
+// Init theme from localStorage or system preference
+(function initTheme() {
+  const saved = localStorage.getItem('mood-theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const theme = saved || (prefersDark ? 'dark' : 'light')
+  document.documentElement.setAttribute('data-theme', theme)
+  const icon = theme === 'dark' ? '☀️' : '🌙'
+  const btn = document.getElementById('theme-btn')
+  const authBtn = document.getElementById('auth-theme-btn')
+  if (btn) btn.textContent = icon
+  if (authBtn) authBtn.textContent = icon
+})()
+
+// ==================== INIT ====================
+// 全局 auth 监听器（只注册一次）
+let authListenerSet = false
+function setupAuthListener() {
+  if (authListenerSet) return
+  authListenerSet = true
+  sb.auth.onAuthStateChange((_event, session) => {
+    currentUser = session?.user || null
+    if (currentUser) {
+      // 刷新本地状态
+      profileName = currentUser?.user_metadata?.display_name || ''
+      if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
+        showToast('登录成功 👋')
+      }
+      if (_event === 'EMAIL_CONFIRMED') {
+        showToast('邮箱确认成功！🎉')
+      }
+      // 邮箱变更确认后也会触发 USER_UPDATED 事件
+      if (_event === 'USER_UPDATED') {
+        showToast('邮箱已更新 ✅')
+      }
+      updateHeader()
+      showAuth(false)
+      renderMoodPicker()
+      loadMoods()
+    } else {
+      showAuth(true)
+      moodsList = []
+      resetForm()
+    }
+  })
+}
+
+async function init() {
+  if (!sb) { showAuth(true); return }
+  try {
+    // 检查 URL hash 是否包含邮件确认 token（从邮件链接跳转回来时）
+    const hash = window.location.hash
+    if (hash.includes('type=recovery')) {
+      // 密码重置链接跳转回来，显示设置新密码界面
+      await new Promise(r => setTimeout(r, 800))
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      showNewPassword()
+      return
+    }
+    if (hash.includes('type=email_change') || hash.includes('type=signup') || hash.includes('access_token')) {
+      showToast('正在确认...')
+      // Supabase JS SDK 会自动从 hash 恢复 session，等它处理完
+      await new Promise(r => setTimeout(r, 1000))
+      // 邮箱变更确认后，刷新当前用户信息
+      const { data: { session } } = await sb.auth.getSession()
+      if (session?.user) {
+        currentUser = session.user
+        profileName = currentUser?.user_metadata?.display_name || ''
+        updateHeader()
+        if (hash.includes('type=email_change')) {
+          showToast('邮箱已更新，请用新邮箱登录 ✅')
+          await sb.auth.signOut()
+          showAuth(true)
+        }
+      }
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+    }
+
+    setupAuthListener()
+
+    const { data: { session } } = await sb.auth.getSession()
+    if (session?.user) {
+      currentUser = session.user
+      loadProfile()
+      showAuth(false)
+      initScrollListeners()
+      renderMoodPicker()
+      await loadMoods()
+    } else {
+      showAuth(true)
+    }
+  } catch (e) {
+    showAuth(true)
+    console.error('Init error:', e)  }
+}
+
+// Handle Enter key on auth form
+document.getElementById('auth-password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleAuth()
+})
+
+// 全局键盘快捷键：分页模式下 ← → 翻页
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('lightbox')) return
+  if (loadMode !== 'page') return
+  if (e.key === 'ArrowLeft') {
+    e.preventDefault()
+    if (currentPage > 1) {
+      goPage(currentPage - 1)
+    } else {
+      showToast('已经是第一页了')
+    }
+  } else if (e.key === 'ArrowRight') {
+    e.preventDefault()
+    if (hasMore) {
+      goPage(currentPage + 1)
+    } else {
+      showToast('已经是最后一页了')
+    }
+  }
+})
+
+// ======= Sticky Header + Heatmap Card (抖动修复版) =======
+let __shc = false, __hpc = null;
+let __shc_ot = 0; // 记录固定时的原始文档位置，避免 getBoundingClientRect 在 fixed 后取值错误
+function __hs() {
+  const sy = window.scrollY;
+  // --- 热力图卡片固定逻辑（仅桌面端） ---
+  if (window.innerWidth >= 860) {
+    const hc = document.getElementById('heatmap-card');
+    if (hc) {
+      if (!__shc) {
+        const r2 = hc.getBoundingClientRect();
+        const ot2 = r2.top + sy;
+        if (sy > ot2 - 10) {
+          __shc = true;
+          __shc_ot = ot2;
+          hc.style.position = 'fixed'; hc.style.top = '10px'; hc.style.left = r2.left+'px'; hc.style.width = r2.width+'px'; hc.style.zIndex = '50';
+          __hpc = document.createElement('div'); __hpc.style.height = r2.height+'px'; __hpc.style.display = 'block';
+          hc.parentNode.insertBefore(__hpc, hc);
+        }
+      } else {
+        if (sy <= __shc_ot - 10) {
+          __shc = false; hc.style.position = ''; hc.style.top = ''; hc.style.left = ''; hc.style.width = ''; hc.style.zIndex = '';
+          if (__hpc) { __hpc.remove(); __hpc = null; }
+        }
+      }
+    }
+  } else {
+    // 移动端：确保热力图卡片不固定
+    if (__shc) {
+      __shc = false;
+      const hc2 = document.getElementById('heatmap-card');
+      if (hc2) { hc2.style.position = ''; hc2.style.top = ''; hc2.style.left = ''; hc2.style.width = ''; hc2.style.zIndex = ''; }
+      if (__hpc) { __hpc.remove(); __hpc = null; }
+    }
+  }
+}
+function __hr() {
+  __shc = false; __shc_ot = 0;
+  const hc = document.getElementById('heatmap-card');
+  if (hc) { hc.style.position = ''; hc.style.top = ''; hc.style.left = ''; hc.style.width = ''; hc.style.zIndex = ''; if (__hpc) { __hpc.remove(); __hpc = null; } }
+  __hs();
+}
+let __hsTicking = false;
+function __hsLoop() {
+  __hsTicking = false;
+  __hs();
+}
+const __hsOnScroll = () => {
+  if (!__hsTicking) {
+    __hsTicking = true;
+    requestAnimationFrame(__hsLoop);
+  }
+};
+function initScrollListeners() {
+  window.removeEventListener('scroll', __hsOnScroll);
+  window.removeEventListener('resize', __hr);
+  window.addEventListener('scroll', __hsOnScroll, { passive: true });
+  window.addEventListener('resize', __hr, { passive: true });
+  __hs();
+}
+
+init()
+</script>
+
+</body>
+</html>
