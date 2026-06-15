@@ -445,7 +445,7 @@
     .mood-item:hover { background: var(--input-bg); margin: 0 -12px; padding: 14px 12px; border-radius: var(--radius-sm); }
   }
   .mood-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; justify-content: space-between; }
-  .mood-header-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .mood-header-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; min-width: 0; }
   .mood-avatar {
     width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
     background: linear-gradient(135deg, var(--accent), #a29bfe);
@@ -455,27 +455,12 @@
   .mood-avatar img { width: 100%; height: 100%; object-fit: cover; }
   .mood-header-info { min-width: 0; }
   .mood-nickname { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
-  .mood-time { font-size: 12px; color: var(--sub); line-height: 1.3; }
-  .mood-header-right {
-    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
-    border-left: 1px solid var(--border);
-    padding-left: 10px;
-  }
-  .mood-emoji-label {
-    display: inline-flex; align-items: center; gap: 4px;
-    background: var(--tag-bg);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 3px 10px 3px 8px;
-    color: var(--text);
-    font-size: 13px;
-  }
-  .mood-emoji-label .emoji { font-size: 16px; }
-  .mood-emoji-label .label { font-size: 12px; font-weight: 500; }
+  .mood-time { font-size: 12px; color: var(--sub); line-height: 1.4; }
+  .mood-time .mood-inline { color: var(--text); font-weight: 500; }
   .mood-actions { display: flex; gap: 2px; flex-shrink: 0; }
   .mood-actions button {
     background: none; border: none; font-size: 12px; color: var(--sub);
-    cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: all .2s; line-height: 1;
+    cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all .2s; line-height: 1;
   }
   .mood-actions button:hover { color: var(--accent); background: var(--tag-bg); }
   .mood-actions .del:hover { color: var(--danger); background: #fee; }
@@ -483,12 +468,12 @@
   .mood-item .note { font-size: 15px; margin-bottom: 6px; word-break: break-word; overflow-wrap: break-word; color: var(--text); }
   .mood-item .meta { font-size: 12px; color: var(--sub); margin-top: 4px; }
 
-  /* 手机端：头部右侧操作区适配 */
   @media (max-width: 480px) {
     .mood-header { flex-wrap: wrap; gap: 6px; }
-    .mood-header-right { gap: 6px; flex-shrink: 1; }
-    .mood-emoji-label .label { display: none; }
-    .mood-actions button { font-size: 12px; padding: 3px 6px; }
+    .mood-avatar { width: 32px; height: 32px; font-size: 13px; }
+    .mood-nickname { font-size: 13px; }
+    .mood-time { font-size: 11px; }
+    .mood-actions button { font-size: 12px; padding: 4px 6px; }
   }
 
   /* Image upload */
@@ -1701,15 +1686,12 @@ function renderHistory() {
             <div class="mood-avatar">${avatarHtml}</div>
             <div class="mood-header-info">
               <div class="mood-nickname">${profileName || '我'}</div>
-              <div class="mood-time">${time}</div>
+              <div class="mood-time">${time} 用<span class="mood-inline">${m.mood}${mood.label}</span>的心情记录</div>
             </div>
           </div>
-          <div class="mood-header-right">
-            <div class="mood-emoji-label"><span class="emoji">${m.mood}</span><span class="label">${mood.label}</span></div>
-            <div class="mood-actions">
-              <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})">✏️ 编辑</button>
-              <button class="del" onclick="deleteMood('${m.id}')">🗑️ 删除</button>
-            </div>
+          <div class="mood-actions">
+            <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})">✏️ 编辑</button>
+            <button class="del" onclick="deleteMood('${m.id}')">🗑️ 删除</button>
           </div>
         </div>
         <div class="mood-body">
