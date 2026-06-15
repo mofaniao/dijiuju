@@ -750,6 +750,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    background: transparent;
   }
   .heatmap-cell {
     width: 13px;
@@ -890,7 +891,7 @@
         </div>
         <div id="heatmap-outer" style="display:flex;overflow:hidden;">
           <!-- 固定左侧：月份标签 + 星期标签 -->
-          <div id="heatmap-left" style="flex-shrink:0;width:36px;display:flex;flex-direction:column;z-index:2;position:relative;"></div>
+          <div id="heatmap-left" style="flex-shrink:0;width:36px;display:flex;flex-direction:column;z-index:2;position:relative;background:transparent;"></div>
           <!-- 可滚动右侧：热力内容 -->
           <div style="overflow-x:auto;flex:1;padding-bottom:8px;" id="heatmap-scroll-container">
             <div id="heatmap-grid" style="display:inline-flex;flex-direction:column;gap:3px;"></div>
