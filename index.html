@@ -444,34 +444,40 @@
   @media (hover: hover) {
     .mood-item:hover { background: var(--input-bg); margin: 0 -12px; padding: 14px 12px; border-radius: var(--radius-sm); }
   }
-  .mood-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .mood-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; justify-content: space-between; }
+  .mood-header-left { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .mood-avatar {
-    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
     background: linear-gradient(135deg, var(--accent), #a29bfe);
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-weight: 700; font-size: 16px; overflow: hidden;
+    color: #fff; font-weight: 700; font-size: 15px; overflow: hidden;
   }
   .mood-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .mood-header-info { flex: 1; min-width: 0; }
+  .mood-header-info { min-width: 0; }
   .mood-nickname { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.3; }
   .mood-time { font-size: 12px; color: var(--sub); line-height: 1.3; }
-  .mood-body { padding-left: 50px; }
-  .mood-emoji-label { font-size: 14px; color: var(--sub); margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+  .mood-header-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .mood-emoji-label { display: flex; align-items: center; gap: 3px; color: var(--sub); }
   .mood-emoji-label .emoji { font-size: 18px; }
   .mood-emoji-label .label { font-size: 12px; }
-  .mood-item .note { font-size: 15px; margin-bottom: 6px; word-break: break-word; overflow-wrap: break-word; color: var(--text); }
-  .mood-item .meta { font-size: 12px; color: var(--sub); margin-top: 4px; }
-  .mood-actions-footer {
-    display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; padding-left: 50px;
-  }
-  .mood-actions-footer button {
+  .mood-actions { display: flex; gap: 2px; flex-shrink: 0; }
+  .mood-actions button {
     background: none; border: none; font-size: 13px; color: var(--sub);
     cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all .2s; line-height: 1;
   }
-  .mood-actions-footer button:hover { color: var(--accent); background: var(--tag-bg); }
-  .mood-actions-footer .del:hover { color: var(--danger); }
+  .mood-actions button:hover { color: var(--accent); background: var(--tag-bg); }
+  .mood-actions .del:hover { color: var(--danger); }
+  .mood-body { padding-left: 48px; }
+  .mood-item .note { font-size: 15px; margin-bottom: 6px; word-break: break-word; overflow-wrap: break-word; color: var(--text); }
+  .mood-item .meta { font-size: 12px; color: var(--sub); margin-top: 4px; }
 
-  /* 手机端：点击显示编辑删除 */
+  /* 手机端：头部右侧操作区适配 */
+  @media (max-width: 480px) {
+    .mood-header { flex-wrap: wrap; gap: 6px; }
+    .mood-header-right { gap: 6px; flex-shrink: 1; }
+    .mood-emoji-label .label { display: none; }
+    .mood-actions button { font-size: 12px; padding: 3px 6px; }
+  }
 
   /* Image upload */
   .img-upload-area {
@@ -661,7 +667,6 @@
     .mood-item { gap: 8px; }
     .mood-avatar { width: 34px; height: 34px; font-size: 14px; }
     .mood-body { padding-left: 42px; }
-    .mood-actions-footer { padding-left: 42px; }
   }
 
   @media (max-width: 540px) {
@@ -1140,14 +1145,6 @@ function renderLightbox() {
     ${hasNext ? '<button class="lb-arrow lb-next" onclick="lbNav(1)">›</button>' : ''}
     <div class="lb-counter">${lbIndex - lbMoodStart + 1} / ${lbMoodEnd - lbMoodStart}</div>
   `
-}
-
-// 手机端点击心情条目切换操作按钮显示
-function toggleMobileActions(event, el) {
-  if (event.target.closest('.mood-actions-footer')) return
-  if (event.target.tagName === 'IMG') return
-  const footer = el.querySelector('.mood-actions-footer')
-  if (footer) footer.classList.toggle('show')
 }
 
 function translateError(msg) {
@@ -1686,25 +1683,29 @@ function renderHistory() {
       : letter
     const imgsJson = JSON.stringify(images).replace(/"/g, '&quot;')
     return `
-      <div class="mood-item" onclick="toggleMobileActions(event, this)">
+      <div class="mood-item">
         <div class="mood-header">
-          <div class="mood-avatar">${avatarHtml}</div>
-          <div class="mood-header-info">
-            <div class="mood-nickname">${profileName || '我'}</div>
-            <div class="mood-time">${time}</div>
+          <div class="mood-header-left">
+            <div class="mood-avatar">${avatarHtml}</div>
+            <div class="mood-header-info">
+              <div class="mood-nickname">${profileName || '我'}</div>
+              <div class="mood-time">${time}</div>
+            </div>
+          </div>
+          <div class="mood-header-right">
+            <div class="mood-emoji-label"><span class="emoji">${m.mood}</span><span class="label">${mood.label}</span></div>
+            <div class="mood-actions">
+              <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})">✏️ 编辑</button>
+              <button class="del" onclick="deleteMood('${m.id}')">🗑️ 删除</button>
+            </div>
           </div>
         </div>
         <div class="mood-body">
-          <div class="mood-emoji-label"><span class="emoji">${m.mood}</span><span class="label">${mood.label}</span></div>
           <div class="note">${m.note || '<span style="color:var(--sub)">无文字</span>'}</div>
           ${imgsHtml}
           <div class="meta">
             ${editingId === m.id ? '<span style="color:var(--accent)">编辑中...</span>' : ''}
           </div>
-        </div>
-        <div class="mood-actions-footer">
-          <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})" title="编辑">✏️ 编辑</button>
-          <button class="del" onclick="deleteMood('${m.id}')" title="删除">🗑️ 删除</button>
         </div>
       </div>`
   }).join('') + `
