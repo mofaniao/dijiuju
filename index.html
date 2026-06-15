@@ -444,7 +444,8 @@
     transition: all .2s;
   }
   .mood-item:last-child { border-bottom: none; }
-  .mood-item .emoji { font-size: 36px; flex-shrink: 0; transition: transform .3s; }
+  .mood-item .emoji { font-size: 36px; flex-shrink: 0; transition: transform .3s; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1; }
+  .mood-item .mood-label { font-size: 11px; color: var(--sub); line-height: 1; white-space: nowrap; }
   @media (hover: hover) {
     .mood-item:hover { background: var(--input-bg); margin: 0 -12px; padding: 16px 12px; border-radius: var(--radius-sm); }
     .mood-item:hover .emoji { transform: scale(1.1); }
@@ -663,7 +664,8 @@
     .auth-card { padding: 28px 20px; }
     .auth-card h1 { font-size: 24px; }
     .mood-item { gap: 8px; }
-    .mood-item .emoji { font-size: 30px; }
+    .mood-item .emoji { font-size: 30px; display: flex; flex-direction: column; align-items: center; gap: 2px; line-height: 1; }
+    .mood-item .mood-label { font-size: 10px; }
     .mood-item .actions button { font-size: 13px; }
   }
 
@@ -1685,7 +1687,7 @@ function renderHistory() {
     const imgsJson = JSON.stringify(images).replace(/"/g, '&quot;')
     return `
       <div class="mood-item" onclick="toggleMobileActions(event, this)">
-        <div class="emoji">${m.mood}</div>
+        <div class="emoji">${m.mood}<span class="mood-label">${mood.label}</span></div>
         <div class="body">
           <div class="note">${m.note || '<span style="color:var(--sub)">无文字</span>'}</div>
           ${imgsHtml}
