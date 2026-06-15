@@ -2203,11 +2203,12 @@ async function loadMoods(append = false, filterDate = null) {
   }
   let query = sb.from('moods').select('*')
   if (filterDate) {
-    // 按日期筛选：created_at >= filterDate 00:00:00 且 < 次日 00:00:00
-    const nextDate = new Date(filterDate)
-    nextDate.setDate(nextDate.getDate() + 1)
-    const nextDateStr = nextDate.toISOString().split('T')[0]
-    query = query.gte('created_at', filterDate + 'T00:00:00').lt('created_at', nextDateStr + 'T00:00:00')
+    // filterDate 是本地日期 YYYY-MM-DD，需转换为 UTC 范围
+    // 因为 Supabase 存储 created_at 为 UTC，直接拼 T00:00:00 会被视为 UTC 导致时区偏差
+    const [y, m, d] = filterDate.split('-').map(Number)
+    const localStart = new Date(y, m - 1, d, 0, 0, 0, 0)   // 本地午夜
+    const localEnd = new Date(y, m - 1, d + 1, 0, 0, 0, 0) // 次日本地午夜
+    query = query.gte('created_at', localStart.toISOString()).lt('created_at', localEnd.toISOString())
   } else {
     const from = (currentPage - 1) * PAGE_SIZE
     const to = currentPage * PAGE_SIZE - 1
