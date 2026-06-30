@@ -93,10 +93,28 @@
   .auth-wrap {
     min-height: 100dvh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px;
     // overflow-x: hidden;
+  }
+  .auth-wrap .auth-card {
+    margin: auto 0;
+  }
+  .auth-footer {
+    text-align: center;
+    padding: 16px 0 20px;
+    font-size: 12px;
+    color: var(--sub);
+    flex-shrink: 0;
+  }
+  .auth-footer a {
+    color: var(--sub);
+    text-decoration: none;
+  }
+  .auth-footer a:hover {
+    color: var(--accent);
   }
   .auth-card {
     background: var(--card);
@@ -789,6 +807,23 @@
     white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    padding: 24px 16px 28px;
+    color: var(--sub);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .site-footer a {
+    color: var(--sub);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .site-footer a:hover {
+    color: var(--accent);
+  }
 </style>
 </head>
 <body>
@@ -811,6 +846,9 @@
       <a onclick="showResetPassword()" style="color:var(--sub);cursor:pointer;">忘记密码？</a>
     </p>
   </div>
+  <div class="auth-footer">
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
+  </div>
 </div>
 
 <!-- Reset Password -->
@@ -826,6 +864,9 @@
       <a onclick="showLogin()">← 返回登录</a>
     </p>
   </div>
+  <div class="auth-footer">
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
+  </div>
 </div>
 
 <!-- New Password (after clicking reset link) -->
@@ -839,6 +880,9 @@
     <label for="newpw-confirm">确认密码</label>
     <input type="password" id="newpw-confirm" placeholder="再输入一次" autocomplete="new-password">
     <button class="btn" id="newpw-submit" onclick="handleNewPassword()">设置新密码</button>
+  </div>
+  <div class="auth-footer">
+    <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
   </div>
 </div>
 
@@ -928,6 +972,10 @@
     </div>
   </div>
 </div>
+
+<footer class="site-footer">
+  <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
+</footer>
 
 <div class="toast" id="toast"></div>
 
