@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <!-- 主题渐变色：紫色到橙色 -->
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6c5ce7"/>
+      <stop offset="100%" style="stop-color:#e17055"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- 圆角矩形背景 -->
+  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
+  
+  <!-- 白色"心"字 -->
+  <text x="16" y="23" 
+        font-family="PingFang SC, Microsoft YaHei, sans-serif" 
+        font-size="18" 
+        font-weight="bold" 
+        fill="white" 
+        text-anchor="middle">心</text>
+</svg>
