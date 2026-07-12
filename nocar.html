@@ -258,10 +258,9 @@
   }
   #qrcode {
     display: inline-block;
-    padding: 16px;
+    padding: 10px;
     background: #fff;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    border-radius: 8px;
     margin-bottom: 16px;
   }
   #qrcode img, #qrcode canvas {
@@ -299,77 +298,48 @@
   .saved-info .label { font-size: 12px; color: var(--sub); }
   .saved-info .value { font-size: 15px; font-weight: 600; }
 
-  /* Scanner view */
-  .scanner-hero {
-    text-align: center;
-    padding: 30px 20px 10px;
-  }
-  .scanner-hero .car-icon {
-    font-size: 72px;
-    display: inline-block;
-    animation: carBounce 2s ease-in-out infinite;
-  }
-  .scanner-hero h1 {
-    font-size: 24px;
-    font-weight: 800;
-    margin: 16px 0 8px;
-    background: linear-gradient(135deg, var(--accent), #e17055);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .scanner-hero p {
-    font-size: 14px;
-    color: var(--sub);
-    margin-bottom: 0;
-  }
-
-  .info-row {
+  /* Scanner minimal page */
+  #scanner-section {
+    background: #52ac39;
+    min-height: 100dvh;
+    max-width: 100%;
+    padding: 0;
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px;
-    background: var(--input-bg);
-    border-radius: var(--radius-sm);
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-  }
-  .info-row .info-label {
-    font-size: 13px;
-    color: var(--sub);
-    font-weight: 500;
-  }
-  .info-row .info-value {
-    font-size: 18px;
-    font-weight: 700;
-  }
-
-  .call-btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, #27ae60, #2ecc71);
-    color: #fff;
-    font-size: 17px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all .3s;
-    position: relative;
-    overflow: hidden;
-    display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 48px;
+  }
+  .scanner-plate {
+    background: linear-gradient(135deg, #1a6dd6, #1558a8);
+    color: #fff;
+    font-size: 38px;
+    font-weight: 800;
+    letter-spacing: 6px;
+    padding: 22px 44px;
+    border-radius: 14px;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    white-space: nowrap;
+  }
+  .scanner-call-btn {
+    background: #fff;
+    color: #52ac39;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 16px 64px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
     text-decoration: none;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.15);
+    transition: transform .2s, box-shadow .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
-  .call-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(39,174,96,0.3); }
-  .call-btn:active { transform: translateY(0); }
-
-  .call-btn.calling {
-    background: linear-gradient(135deg, #e17055, #fd79a8);
-    animation: pulse 1.5s infinite;
-  }
+  .scanner-call-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 36px rgba(0,0,0,0.25); }
+  .scanner-call-btn:active { transform: translateY(0); }
 
   /* Toast */
   .toast {
@@ -546,38 +516,9 @@
 </div>
 
 <!-- Scanner Mode: Someone scanned the QR code -->
-<div id="scanner-section" class="app" style="display:none;">
-  <div class="header">
-    <div class="title">🚗 一键挪车</div>
-    <button class="back-btn theme-toggle" onclick="toggleTheme()">🌙</button>
-  </div>
-
-  <div class="card" id="scanner-card">
-    <div class="scanner-hero">
-      <div class="car-icon">🚙</div>
-      <h1>需要挪车？</h1>
-      <p>这辆车的主人留下了联系方式<br>点击下方按钮一键通知车主</p>
-    </div>
-
-    <div style="margin-top:24px;">
-      <div class="info-row">
-        <span class="info-label">车牌号</span>
-        <span class="info-value" id="scanner-plate" style="color:var(--plate-text);"></span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">车主电话</span>
-        <span class="info-value" id="scanner-phone"></span>
-      </div>
-    </div>
-
-    <a href="#" id="call-btn" class="call-btn" onclick="callOwner(event)">
-      📞 一键联系车主挪车
-    </a>
-
-    <p style="text-align:center;font-size:12px;color:var(--sub);margin-top:16px;">
-      电话已脱敏处理，保护车主隐私
-    </p>
-  </div>
+<div id="scanner-section" style="display:none;">
+  <div class="scanner-plate" id="scanner-plate"></div>
+  <a href="#" id="call-btn" class="scanner-call-btn" onclick="callOwner(event)">📞 一键挪车</a>
 </div>
 
 <!-- Scanner Error -->
@@ -606,6 +547,7 @@ const STORAGE_KEY = 'nocar_data';
 let selectedProvince = '川';
 let selectedEnergy = 'fuel';
 let savedData = null;
+let qrCodeInstance = null;
 
 // ==================== THEME ====================
 function toggleTheme() {
@@ -734,6 +676,14 @@ function decodeData(encoded) {
 }
 
 // ==================== QR CODE GENERATION ====================
+function createEnergyLogo(energyType) {
+  const emojis = { fuel: '\u{1F697}', ev: '\u{1F50B}', hybrid: '\u26A1' };
+  const emoji = emojis[energyType] || emojis.fuel;
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">' +
+    '<text x="24" y="26" font-size="34" text-anchor="middle" dominant-baseline="central">' + emoji + '</text></svg>';
+  return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+}
+
 function generateQR() {
   const plateNumber = document.getElementById('plate-number').value.trim().toUpperCase();
   const phone = document.getElementById('phone-number').value.trim();
@@ -760,13 +710,14 @@ function generateQR() {
   const baseUrl = window.location.origin + window.location.pathname;
   const scanUrl = baseUrl + '?d=' + encodeData(data);
 
-  // Render QR
+  // Render styled QR code
   const qrContainer = document.getElementById('qrcode');
   qrContainer.innerHTML = '';
+
   new QRCode(qrContainer, {
     text: scanUrl,
-    width: 220,
-    height: 220,
+    width: 200,
+    height: 200,
     colorDark: '#000000',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.L
@@ -875,12 +826,12 @@ function getEnergyLabel(type) {
 function showScannerMode(data) {
   document.getElementById('owner-section').style.display = 'none';
   document.getElementById('scanner-error').style.display = 'none';
-  document.getElementById('scanner-section').style.display = 'block';
+  document.getElementById('scanner-section').style.display = 'flex';
 
-  // Display plate
-  document.getElementById('scanner-plate').innerHTML = `<span class="plate-preview">${data.p}</span>`;
-  // Display masked phone
-  document.getElementById('scanner-phone').textContent = maskPhone(data.t);
+  // Format plate with dot separator
+  const plate = data.p;
+  const formatted = plate.length > 2 ? plate.slice(0, 2) + ' · ' + plate.slice(2) : plate;
+  document.getElementById('scanner-plate').textContent = formatted;
 
   // Set call button href
   const callBtn = document.getElementById('call-btn');
@@ -888,11 +839,7 @@ function showScannerMode(data) {
 }
 
 function callOwner(e) {
-  // The tel: link will handle the actual call
-  // Add visual feedback
-  const btn = document.getElementById('call-btn');
-  btn.classList.add('calling');
-  setTimeout(() => btn.classList.remove('calling'), 3000);
+  // tel: link handles the actual call
 }
 
 // ==================== INIT ====================
