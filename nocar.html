@@ -308,19 +308,46 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 48px;
+    gap: 32px;
+    padding-botom: 20dvh;
+  }
+  .scanner-hint {
+    color: #fff;
+    font-size: 50px;
+    font-style: italic;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-align: center;
+    line-height: 1.6;
   }
   .scanner-plate {
-    background: linear-gradient(135deg, #1a6dd6, #1558a8);
+    background: #1a6dd6;
     color: #fff;
-    font-size: 38px;
-    font-weight: 800;
-    letter-spacing: 6px;
-    padding: 22px 44px;
-    border-radius: 14px;
-    font-family: 'Courier New', monospace;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+    border-radius: 0;
+    padding: 12px 20px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .scanner-plate .plate-province {
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .scanner-plate .plate-dot {
+    font-size: 18px;
+    opacity: 0.7;
+    line-height: 1;
+    margin: 0 1px;
+  }
+  .scanner-plate .plate-num {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1;
   }
   .scanner-call-btn {
     background: #fff;
@@ -517,6 +544,7 @@
 
 <!-- Scanner Mode: Someone scanned the QR code -->
 <div id="scanner-section" style="display:none;">
+  <div class="scanner-hint">微信扫码<br>呼叫车主</div>
   <div class="scanner-plate" id="scanner-plate"></div>
   <a href="#" id="call-btn" class="scanner-call-btn" onclick="callOwner(event)">📞 一键挪车</a>
 </div>
@@ -828,10 +856,14 @@ function showScannerMode(data) {
   document.getElementById('scanner-error').style.display = 'none';
   document.getElementById('scanner-section').style.display = 'flex';
 
-  // Format plate with dot separator
+  // Split plate into province char + alphanumeric for better height alignment
   const plate = data.p;
-  const formatted = plate.length > 2 ? plate.slice(0, 2) + ' · ' + plate.slice(2) : plate;
-  document.getElementById('scanner-plate').textContent = formatted;
+  const province = plate.slice(0, 1);
+  const rest = plate.slice(1);
+  document.getElementById('scanner-plate').innerHTML =
+    '<span class="plate-province">' + province + '</span>' +
+    '<span class="plate-dot">·</span>' +
+    '<span class="plate-num">' + rest + '</span>';
 
   // Set call button href
   const callBtn = document.getElementById('call-btn');
