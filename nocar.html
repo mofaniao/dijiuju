@@ -481,13 +481,11 @@
 </head>
 <body>
 
-<button class="theme-fab" onclick="toggleTheme()" id="theme-fab">🌙</button>
-
 <!-- Owner Mode: Setup + QR Code -->
 <div id="owner-section" class="app">
   <div class="header">
     <div class="title">🚗 一键挪车</div>
-    <a href="index.html" class="back-btn">← 返回</a>
+    <button class="back-btn theme-toggle" onclick="toggleTheme()">🌙</button>
   </div>
 
   <!-- Setup Card -->
@@ -551,6 +549,7 @@
 <div id="scanner-section" class="app" style="display:none;">
   <div class="header">
     <div class="title">🚗 一键挪车</div>
+    <button class="back-btn theme-toggle" onclick="toggleTheme()">🌙</button>
   </div>
 
   <div class="card" id="scanner-card">
@@ -585,6 +584,7 @@
 <div id="scanner-error" class="app" style="display:none;">
   <div class="header">
     <div class="title">🚗 一键挪车</div>
+    <button class="back-btn theme-toggle" onclick="toggleTheme()">🌙</button>
   </div>
   <div class="card">
     <div class="empty">
@@ -594,12 +594,6 @@
     </div>
   </div>
 </div>
-
-<footer class="site-footer">
-  <a href="index.html">← 返回心情记录</a>
-  &nbsp;|&nbsp;
-  <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
-</footer>
 
 <div class="toast" id="toast"></div>
 
@@ -618,7 +612,7 @@ function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'light';
   const next = current === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', next);
-  document.getElementById('theme-fab').textContent = next === 'dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(el => el.textContent = next === 'dark' ? '☀️' : '🌙');
   localStorage.setItem('nocar-theme', next);
 }
 
@@ -627,7 +621,7 @@ function toggleTheme() {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const theme = saved || (prefersDark ? 'dark' : 'light');
   document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-fab').textContent = theme === 'dark' ? '☀️' : '🌙';
+  document.querySelectorAll('.theme-toggle').forEach(el => el.textContent = theme === 'dark' ? '☀️' : '🌙');
 })();
 
 // ==================== TOAST ====================
@@ -690,17 +684,50 @@ function getFullPlate() {
 }
 
 // ==================== DATA ENCODING ====================
+// Ultra-compact format: provinceIndex(base36) + plate + phone + energyCode
+// No separators — phone is always last 11 chars, energy is last char, province is first char
+// ~50% shorter URL than original JSON base64
+const ENERGY_CODES = ['fuel', 'ev', 'hybrid'];
+
 function encodeData(data) {
-  // Simple base64 encoding of JSON
-  const json = JSON.stringify(data);
-  // Use UTF-8 safe base64
-  return btoa(unescape(encodeURIComponent(json)));
+  const pi = PROVINCES.indexOf(data.p[0]).toString(36); // 0-9, a-t (single char)
+  const plateNum = data.p.slice(1);
+  const ec = ENERGY_CODES.indexOf(data.e); // 0, 1, 2
+  const compact = pi + plateNum + data.t + ec;
+  return btoa(compact).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function decodeData(encoded) {
   try {
-    const json = decodeURIComponent(escape(atob(encoded)));
-    return JSON.parse(json);
+    let b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+    while (b64.length % 4) b64 += '=';
+    const decoded = atob(b64);
+
+    // New compact format: pi(1) + plate(5-7) + phone(11) + ec(1) = 18-20 chars
+    if (decoded.length >= 18 && decoded.length <= 20) {
+      const pi = parseInt(decoded[0], 36);
+      const ec = parseInt(decoded[decoded.length - 1], 10);
+      const phone = decoded.slice(-12, -1);
+      const plateNum = decoded.slice(1, -12);
+      if (!isNaN(pi) && pi >= 0 && pi < PROVINCES.length && /^\d{11}$/.test(phone)) {
+        return { p: PROVINCES[pi] + plateNum, t: phone, e: ENERGY_CODES[ec] || 'fuel' };
+      }
+    }
+
+    // Fallback: old comma format "pi,plate,phone,ec"
+    const parts = decoded.split(',');
+    if (parts.length === 4 && /^\d+$/.test(parts[0])) {
+      const pi = parseInt(parts[0], 10);
+      if (pi >= 0 && pi < PROVINCES.length) {
+        const ec = parseInt(parts[3], 10);
+        return { p: PROVINCES[pi] + parts[1], t: parts[2], e: ENERGY_CODES[ec] || 'fuel' };
+      }
+    }
+
+    // Fallback: original JSON format
+    const json = decodeURIComponent(escape(decoded));
+    const data = JSON.parse(json);
+    return (data && data.p && data.t) ? data : null;
   } catch (e) {
     return null;
   }
@@ -721,8 +748,7 @@ function generateQR() {
   const data = {
     p: fullPlate,
     t: phone,
-    e: selectedEnergy,
-    ts: Date.now()
+    e: selectedEnergy
   };
 
   savedData = data;
@@ -743,7 +769,7 @@ function generateQR() {
     height: 220,
     colorDark: '#000000',
     colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
+    correctLevel: QRCode.CorrectLevel.L
   });
 
   // Display saved info
