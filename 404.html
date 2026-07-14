@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>404 - 页面走丢了</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="shortcut icon" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="msapplication-TileImage" content="favicon.svg">
+<meta name="msapplication-TileColor" content="#6c5ce7">
+<style>
+  :root { --radius: 14px; --radius-sm: 10px; }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+    min-height: 100dvh;
+  }
+
+  [data-theme="light"] {
+    --bg: #f5f0eb;
+    --card: rgba(255,255,255,0.85);
+    --card-solid: #ffffff;
+    --text: #2c2c2c;
+    --sub: #888;
+    --border: rgba(0,0,0,0.08);
+    --accent: #6c5ce7;
+    --accent-glow: rgba(108,92,231,0.3);
+    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0f0f1a;
+    --card: rgba(30,30,55,0.8);
+    --card-solid: #1e1e37;
+    --text: #e0e0e0;
+    --sub: #888;
+    --border: rgba(255,255,255,0.08);
+    --accent: #a78bfa;
+    --accent-glow: rgba(167,139,250,0.3);
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    transition: background .5s, color .5s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+    100% { box-shadow: 0 0 0 16px transparent; }
+  }
+
+  .not-found-card {
+    background: var(--card);
+    border-radius: 18px;
+    padding: 48px 32px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 0 1px var(--border);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: fadeUp .6s ease-out;
+  }
+
+  .emoji-404 {
+    font-size: 72px;
+    line-height: 1;
+    margin-bottom: 16px;
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .not-found-card h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), #e17055);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .not-found-card .desc {
+    color: var(--sub);
+    font-size: 15px;
+    margin-bottom: 8px;
+  }
+
+  .not-found-card .countdown {
+    color: var(--sub);
+    font-size: 13px;
+    margin-bottom: 24px;
+  }
+  .not-found-card .countdown .num {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .home-btn {
+    display: inline-block;
+    padding: 14px 40px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .3s;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+    opacity: 0; transition: opacity .3s;
+  }
+  .home-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--accent-glow);
+    animation: pulse 1.5s infinite;
+  }
+  .home-btn:hover::after { opacity: 1; }
+  .home-btn:active { transform: translateY(0); }
+
+  .theme-fab {
+    position: fixed; top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    font-size: 20px; cursor: pointer; z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .3s cubic-bezier(.4,0,.2,1);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .theme-fab:hover { transform: scale(1.12) rotate(15deg); box-shadow: 0 4px 20px var(--accent-glow); }
+
+  .site-footer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    text-align: center;
+    padding: 12px 16px;
+    color: var(--sub);
+    font-size: 12px;
+  }
+  .site-footer a {
+    color: var(--sub);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .site-footer a:hover { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<button class="theme-fab" onclick="toggleTheme()" id="theme-btn">🌙</button>
+
+<div class="not-found-card">
+  <div class="emoji-404">🔍</div>
+  <h1>404</h1>
+  <p class="desc">页面走丢了，正在带你回家...</p>
+  <p class="countdown"><span class="num" id="countdown">3</span> 秒后自动跳转</p>
+  <a href="index.html" class="home-btn">🏠 立即返回首页</a>
+</div>
+
+<footer class="site-footer">
+  <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">蜀ICP备14031151号-2</a>
+</footer>
+
+<script>
+// ==================== THEME ====================
+function toggleTheme() {
+  var current = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = current === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('theme-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+  try { localStorage.setItem('mood-theme', next); } catch(e) {}
+}
+
+(function initTheme() {
+  var saved = null;
+  try { saved = localStorage.getItem('mood-theme'); } catch(e) {}
+  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = saved || (prefersDark ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-btn').textContent = theme === 'dark' ? '☀️' : '🌙';
+})();
+
+// ==================== AUTO REDIRECT ====================
+var seconds = 3;
+var countdownEl = document.getElementById('countdown');
+
+var timer = setInterval(function() {
+  seconds--;
+  if (seconds <= 0) {
+    clearInterval(timer);
+    window.location.href = 'index.html';
+  } else {
+    countdownEl.textContent = seconds;
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
