@@ -1304,7 +1304,7 @@ async function saveProfile() {
   if (name !== profileName) {
     profileName = name
     const { error } = await sb.auth.updateUser({
-      data: { display_name: name }
+      data: { name: name }
     })
     if (error) { showToast('昵称保存失败: ' + error.message); return }
   }
@@ -1378,7 +1378,7 @@ function updateHeader() {
 }
 
 function loadProfile() {
-  profileName = currentUser?.user_metadata?.display_name || ''
+  profileName = currentUser?.user_metadata?.name || ''
   updateHeader()
 }
 
@@ -2392,7 +2392,7 @@ function setupAuthListener() {
     currentUser = session?.user || null
     if (currentUser) {
       // 刷新本地状态
-      profileName = currentUser?.user_metadata?.display_name || ''
+      profileName = currentUser?.user_metadata?.name || ''
       if (_event === 'SIGNED_IN' || _event === 'TOKEN_REFRESHED') {
         showToast('登录成功 👋')
       }
@@ -2435,7 +2435,7 @@ async function init() {
       const { data: { session } } = await sb.auth.getSession()
       if (session?.user) {
         currentUser = session.user
-        profileName = currentUser?.user_metadata?.display_name || ''
+        profileName = currentUser?.user_metadata?.name || ''
         updateHeader()
         if (hash.includes('type=email_change')) {
           showToast('邮箱已更新，请用新邮箱登录 ✅')
