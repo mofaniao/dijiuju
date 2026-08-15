@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
-    <!-- 主题渐变色：紫色到橙色 -->
+    <!-- 主题渐变色：紫 → 浅紫（对齐小程序） -->
     <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#6c5ce7"/>
-      <stop offset="100%" style="stop-color:#e17055"/>
+      <stop offset="100%" style="stop-color:#a29bfe"/>
     </linearGradient>
   </defs>
   

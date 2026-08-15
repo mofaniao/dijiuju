@@ -10,7 +10,7 @@
 <meta name="msapplication-TileImage" content="favicon.svg">
 <meta name="msapplication-TileColor" content="#6c5ce7">
 <style>
-  :root { --radius: 14px; --radius-sm: 10px; }
+  :root { --radius: 16px; --radius-sm: 10px; --radius-pill: 999px; --ease: cubic-bezier(0.22, 1, 0.36, 1); }
 
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
@@ -21,27 +21,29 @@
   }
 
   [data-theme="light"] {
-    --bg: #f5f0eb;
-    --card: rgba(255,255,255,0.85);
+    --bg: #f7f3ee;
+    --card: #ffffff;
     --card-solid: #ffffff;
-    --text: #2c2c2c;
-    --sub: #888;
-    --border: rgba(0,0,0,0.08);
+    --text: #2b2b2b;
+    --sub: #9a958e;
+    --border: rgba(0,0,0,0.06);
     --accent: #6c5ce7;
-    --accent-glow: rgba(108,92,231,0.3);
-    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --accent-glow: rgba(108,92,231,0.28);
+    --accent-grad: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    --shadow: 0 2px 12px rgba(0,0,0,0.05);
   }
 
   [data-theme="dark"] {
-    --bg: #0f0f1a;
-    --card: rgba(30,30,55,0.8);
-    --card-solid: #1e1e37;
-    --text: #e0e0e0;
-    --sub: #888;
+    --bg: #0a0a16;
+    --card: #16162e;
+    --card-solid: #16162e;
+    --text: #e4e4f0;
+    --sub: #8888a8;
     --border: rgba(255,255,255,0.08);
     --accent: #a78bfa;
-    --accent-glow: rgba(167,139,250,0.3);
-    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --accent-glow: rgba(167,139,250,0.28);
+    --accent-grad: linear-gradient(135deg, #a78bfa, #c4b5fd);
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -72,15 +74,13 @@
 
   .not-found-card {
     background: var(--card);
-    border-radius: 18px;
+    border-radius: var(--radius);
     padding: 48px 32px;
     width: 100%;
     max-width: 400px;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 0 0 1px var(--border);
+    box-shadow: var(--shadow);
     border: 1px solid var(--border);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
     animation: fadeUp .6s ease-out;
   }
 
@@ -96,7 +96,7 @@
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 8px;
-    background: linear-gradient(135deg, var(--accent), #e17055);
+    background: var(--accent-grad);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -123,13 +123,13 @@
     display: inline-block;
     padding: 14px 40px;
     border: none;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(135deg, var(--accent), #a29bfe);
+    border-radius: var(--radius-pill);
+    background: var(--accent-grad);
     color: #fff;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    transition: all .3s;
+    transition: all .3s var(--ease);
     text-decoration: none;
     position: relative;
     overflow: hidden;
@@ -157,9 +157,7 @@
     box-shadow: var(--shadow);
     font-size: 20px; cursor: pointer; z-index: 100;
     display: flex; align-items: center; justify-content: center;
-    transition: all .3s cubic-bezier(.4,0,.2,1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    transition: all .3s var(--ease);
   }
   .theme-fab:hover { transform: scale(1.12) rotate(15deg); box-shadow: 0 4px 20px var(--accent-glow); }
 

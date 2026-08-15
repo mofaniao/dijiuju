@@ -10,7 +10,7 @@
 <link rel="icon" type="image/svg+xml" sizes="any" href="favicon.svg">
 <meta name="msapplication-TileImage" content="favicon.svg">
 <meta name="msapplication-TileColor" content="#6c5ce7">
-<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2.112.3/dist/umd/supabase.js" integrity="sha384-qafw21c/iciq0VXsi9FzkfoQv5I/V0iqE4lSNcKXPnW9/UTJLnv5CcN4FHxVLnKg" crossorigin="anonymous"></script>
 <style>
   :root { --radius: 14px; --radius-sm: 10px; }
 
@@ -1013,6 +1013,24 @@
 const SUPABASE_URL = 'https://dqsfmqsjjifzqwdluwry.supabase.co'
 const SUPABASE_ANON_KEY = 'sb_publishable_Q3K48_BtjJIKKsUYvCPu4Q_wQSeC4Qe'
 
+// ==================== SECURITY HELPERS ====================
+// HTML 转义：所有拼进 innerHTML 的「文本/属性」用户可控内容必须先过这里
+function escapeHtml(s) {
+  if (s === null || s === undefined) return ''
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+}
+// 生成安全的 JS 字符串字面量，用于嵌在双引号 HTML 属性的内联 onclick 参数里
+function jsStr(s) {
+  return String(s ?? '').replace(/[\\'"&<>\r\n]/g, (c) => ({ '\\': '\\\\', "'": "\\'", '"': '&quot;', '&': '&amp;', '<': '&lt;', '>': '&gt;', '\r': '\\r', '\n': '\\n' }[c]))
+}
+// 允许的图片 MIME 白名单 → 扩展名（拒绝 svg/html 等可执行类型）
+const IMAGE_MIME_EXT = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+}
+
 // ==================== STATE ====================
 let currentUser = null
 let editingId = null
@@ -1075,7 +1093,8 @@ async function uploadImages() {
   showToast(`正在上传 ${pendingImages.length} 张图片...`)
   const urls = []
   for (const file of pendingImages) {
-    const ext = file.name.split('.').pop() || 'jpg'
+    const ext = IMAGE_MIME_EXT[file.type]
+    if (!ext) { showToast('仅支持 JPG/PNG/WebP/GIF 图片'); return null }
     const path = `moods/${currentUser.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`
     const { data, error } = await sb.storage.from('moods').upload(path, file, {
       cacheControl: '3600',
@@ -1182,7 +1201,7 @@ function renderLightbox() {
   el.innerHTML = `
     <button class="lb-close" onclick="closeLightbox()">&times;</button>
     ${hasPrev ? '<button class="lb-arrow lb-prev" onclick="lbNav(-1)">‹</button>' : ''}
-    <img src="${imgs[lbIndex]}" alt="预览">
+    <img src="${escapeHtml(imgs[lbIndex])}" alt="预览">
     ${hasNext ? '<button class="lb-arrow lb-next" onclick="lbNav(1)">›</button>' : ''}
     <div class="lb-counter">${lbIndex - lbMoodStart + 1} / ${lbMoodEnd - lbMoodStart}</div>
   `
@@ -1251,7 +1270,7 @@ function renderAvatarPreview() {
   const preview = document.getElementById('profile-avatar-preview')
   const avatarUrl = currentUser?.user_metadata?.avatar_url
   if (avatarUrl) {
-    preview.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`
+    preview.innerHTML = `<img src="${escapeHtml(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;">`
   } else {
     preview.innerHTML = ''
     preview.textContent = (profileName || currentUser?.email || 'U').charAt(0).toUpperCase()
@@ -1262,6 +1281,7 @@ async function handleAvatarSelect(event) {
   const file = event.target.files[0]
   if (!file) return
   if (file.size > 2 * 1024 * 1024) { showToast('头像不能超过 2MB'); return }
+  if (!IMAGE_MIME_EXT[file.type]) { showToast('头像仅支持 JPG/PNG/WebP/GIF 图片'); return }
   showToast('正在上传头像...')
 
   // 先删除旧头像
@@ -1280,7 +1300,7 @@ async function handleAvatarSelect(event) {
     }
   }
 
-  const ext = file.name.split('.').pop() || 'jpg'
+  const ext = IMAGE_MIME_EXT[file.type]
   const path = `avatars/${currentUser.id}/${Date.now()}.${ext}`
   const { data, error } = await sb.storage.from('moods').upload(path, file, {
     cacheControl: '3600', upsert: true
@@ -1351,7 +1371,7 @@ function updateHeader() {
   if (mobileEmail) mobileEmail.textContent = currentUser.email
   if (mobileAvatar) {
     if (avatarUrl) {
-      mobileAvatar.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;">`
+      mobileAvatar.innerHTML = `<img src="${escapeHtml(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;">`
     } else {
       mobileAvatar.innerHTML = ''
       mobileAvatar.textContent = letter
@@ -1369,7 +1389,7 @@ function updateHeader() {
   if (sbTheme) sbTheme.textContent = (theme === 'dark' ? '☀️' : '🌙') + ' 切换主题'
   if (sbAvatar) {
     if (avatarUrl) {
-      sbAvatar.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      sbAvatar.innerHTML = `<img src="${escapeHtml(avatarUrl)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
     } else {
       sbAvatar.innerHTML = ''
       sbAvatar.textContent = letter
@@ -1660,9 +1680,9 @@ function renderHistory() {
   if (title) {
     if (moodFilterEmoji) {
       const mo = MOODS.find(x => x.emoji === moodFilterEmoji) || {}
-      title.innerHTML = `😌${mo.label || moodFilterEmoji} 的心情（${moodsList.length} 条）<button onclick="clearMoodFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
+      title.innerHTML = `😌${escapeHtml(mo.label || moodFilterEmoji)} 的心情（${moodsList.length} 条）<button onclick="clearMoodFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
     } else if (heatmapFilterDate) {
-      title.innerHTML = `${heatmapFilterDate} 的心情（${moodsList.length} 条）<button onclick="clearDateFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
+      title.innerHTML = `${escapeHtml(heatmapFilterDate)} 的心情（${moodsList.length} 条）<button onclick="clearDateFilter()" style="margin-left:8px;font-size:12px;padding:3px 10px;border:1px solid var(--accent);border-radius:12px;background:var(--card);color:var(--accent);cursor:pointer;vertical-align:middle;">清除筛选</button>`
     } else {
       title.textContent = `共 ${totalMoodsCount || moodsList.length} 条心情`
     }
@@ -1696,26 +1716,26 @@ function renderHistory() {
       const baseIdx = window._moodImagesMap[mi].start;
       if (images.length === 1) {
         imgsHtml = `<div class="mood-images count-1">
-          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+          <img src="${escapeHtml(images[0])}" onclick="openLightbox(${baseIdx})" alt="心情图片">
         </div>`;
       } else if (images.length === 2) {
         imgsHtml = `<div class="mood-images count-2">
-          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
-          <img src="${images[1]}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
+          <img src="${escapeHtml(images[0])}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+          <img src="${escapeHtml(images[1])}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
         </div>`;
       } else if (images.length === 4) {
         imgsHtml = `<div class="mood-images count-4">
-          <img src="${images[0]}" onclick="openLightbox(${baseIdx})" alt="心情图片">
-          <img src="${images[1]}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
-          <img src="${images[2]}" onclick="openLightbox(${baseIdx+2})" alt="心情图片">
-          <img src="${images[3]}" onclick="openLightbox(${baseIdx+3})" alt="心情图片">
+          <img src="${escapeHtml(images[0])}" onclick="openLightbox(${baseIdx})" alt="心情图片">
+          <img src="${escapeHtml(images[1])}" onclick="openLightbox(${baseIdx+1})" alt="心情图片">
+          <img src="${escapeHtml(images[2])}" onclick="openLightbox(${baseIdx+2})" alt="心情图片">
+          <img src="${escapeHtml(images[3])}" onclick="openLightbox(${baseIdx+3})" alt="心情图片">
         </div>`;
       } else {
         imgsHtml = `
         <div class="mood-images">
           ${images.map((url, ii) => {
             const globalIdx = baseIdx + ii;
-            return `<img src="${url}" onclick="openLightbox(${globalIdx})" alt="心情图片">`
+            return `<img src="${escapeHtml(url)}" onclick="openLightbox(${globalIdx})" alt="心情图片">`
           }).join('')}
         </div>`;
       }
@@ -1723,7 +1743,7 @@ function renderHistory() {
     const avatarUrl = currentUser?.user_metadata?.avatar_url
     const letter = (profileName || currentUser?.email || 'U').charAt(0).toUpperCase()
     const avatarHtml = avatarUrl
-      ? `<img src="${avatarUrl}">`
+      ? `<img src="${escapeHtml(avatarUrl)}">`
       : letter
     const imgsJson = JSON.stringify(images).replace(/"/g, '&quot;')
     return `
@@ -1732,17 +1752,17 @@ function renderHistory() {
           <div class="mood-header-left">
             <div class="mood-avatar">${avatarHtml}</div>
             <div class="mood-header-info">
-              <div class="mood-nickname">${profileName || '我'}</div>
-              <div class="mood-time">${time} 用<span class="mood-inline" onclick="filterByMood('${m.mood}')">${mood.label}</span>的心情记录</div>
+              <div class="mood-nickname">${escapeHtml(profileName || '我')}</div>
+              <div class="mood-time">${time} 用<span class="mood-inline" onclick="filterByMood('${jsStr(m.mood)}')">${escapeHtml(mood.label)}</span>的心情记录</div>
             </div>
           </div>
           <div class="mood-actions">
-            <button onclick="editMood('${m.id}','${m.mood}','${(m.note||'').replace(/'/g,'&apos;')}',${imgsJson})">✏️ 编辑</button>
+            <button onclick="editMood('${jsStr(m.id)}','${jsStr(m.mood)}','${jsStr(m.note)}',${imgsJson})">✏️ 编辑</button>
             <button class="del" onclick="deleteMood('${m.id}')">🗑️ 删除</button>
           </div>
         </div>
         <div class="mood-body">
-          <div class="note">${m.note || '<span style="color:var(--sub)">无文字</span>'}</div>
+          <div class="note">${escapeHtml(m.note) || '<span style="color:var(--sub)">无文字</span>'}</div>
           ${imgsHtml}
           <div class="meta">
             ${editingId === m.id ? '<span style="color:var(--accent)">编辑中...</span>' : ''}
@@ -2183,8 +2203,8 @@ function editMood(id, mood, note, images) {
     // 用 data attribute 存已有图片 URL，提交时合并
     document.getElementById('img-preview').innerHTML = images.map((url, i) => `
       <div class="img-preview-item">
-        <img src="${url}" alt="已有图片">
-        <button class="remove-btn" onclick="removeExistingImg(${i}, '${id}')">×</button>
+        <img src="${escapeHtml(url)}" alt="已有图片">
+        <button class="remove-btn" onclick="removeExistingImg(${i}, '${jsStr(id)}')">×</button>
       </div>`).join('')
     // 暂存已有图片到全局，供提交时读取
     window._editingImages = [...images]
