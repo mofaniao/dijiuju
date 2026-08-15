@@ -1252,6 +1252,7 @@ const PAGE_SIZE = 20
 let hasMore = true
 let totalMoodsCount = 0  // 所有心情的总条数
 let loadMode = 'more'  // 'more' = 加载更多, 'page' = 分页
+let isLoadingMore = false  // 加载更多进行中标记，防止滚动自动加载与点击并发触发
 
 function toggleProfile() {
   const modal = document.getElementById('profile-modal')
@@ -1789,13 +1790,15 @@ function renderHistory() {
         : renderPageNav()
       }
     </div>`
+  setupLoadMoreObserver()
 }
 
 async function loadMore() {
+  if (isLoadingMore || !hasMore) return
+  isLoadingMore = true
   currentPage++
   const btn = document.getElementById('load-more-btn')
-  btn.textContent = '加载中...'
-  btn.disabled = true
+  if (btn) { btn.textContent = '加载中...'; btn.disabled = true }
   // 获取总数
   const { count } = await sb.from('moods').select('*', { count: 'exact', head: true })
   totalMoodsCount = count || 0
@@ -1805,12 +1808,27 @@ async function loadMore() {
     .select('*')
     .order('created_at', { ascending: false })
     .range(from, to)
-  btn.textContent = '↓ 加载更多'
-  btn.disabled = false
-  if (error) { showToast('加载失败: ' + error.message); currentPage--; return }
+  if (btn) { btn.textContent = '↓ 加载更多'; btn.disabled = false }
+  if (error) { showToast('加载失败: ' + error.message); currentPage--; isLoadingMore = false; return }
   hasMore = data.length >= PAGE_SIZE
   moodsList = [...moodsList, ...data]
+  isLoadingMore = false
   renderHistory()
+}
+
+// 滚动到底部自动加载：监听 load-more-wrap 是否进入视口
+let loadMoreObserver = null
+function setupLoadMoreObserver() {
+  if (loadMoreObserver) { loadMoreObserver.disconnect(); loadMoreObserver = null }
+  if (loadMode !== 'more' || !('IntersectionObserver' in window)) return
+  const wrap = document.getElementById('load-more-wrap')
+  if (!wrap) return
+  loadMoreObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+      loadMore()
+    }
+  }, { rootMargin: '200px 0px' })  // 提前 200px 触发，滚动接近底部即加载
+  loadMoreObserver.observe(wrap)
 }
 
 async function goPage(page) {
@@ -2063,19 +2081,18 @@ async function handleNewPassword() {
       btn.textContent = '设置新密码'
       return
     }
-    showToast('密码已重置 ✅')
-    // 重置成功，跳转到主界面
-    const { data: { session } } = await sb.auth.getSession()
-    if (session?.user) {
-      currentUser = session.user
-      loadProfile()
-      showAuth(false)
-      initScrollListeners()
-      renderMoodPicker()
-      await loadMoods()
-    } else {
-      showLogin()
-    }
+    showToast('密码已重置，请重新登录 ✅')
+    // 重置成功后强制退出会话并回到登录界面，重新登录成功后再展示正文
+    await sb.auth.signOut()
+    currentUser = null
+    moodsList = []
+    resetAuthForm()
+    showLogin()
+    document.getElementById('app-section').style.display = 'none'  // 确保正文不显示
+    document.getElementById('newpw-password').value = ''
+    document.getElementById('newpw-confirm').value = ''
+    btn.disabled = false
+    btn.textContent = '设置新密码'
   } catch (e) {
     const msg = e.name === 'AbortError' ? '请求超时，请重试' : (e.message || '未知错误')
     err.textContent = '网络错误：' + msg
