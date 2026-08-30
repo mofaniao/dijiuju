@@ -1,0 +1,14 @@
+{
+  "spider": "",
+  "sites": [
+    {
+      "key": "dijiuju_anime",
+      "name": "地久居动漫",
+      "type": 3,
+      "api": "https://dijiuju.cn/tvbox/spider.js",
+      "searchable": 1,
+      "playable": 1,
+      "ext": ""
+    }
+  ]
+}
